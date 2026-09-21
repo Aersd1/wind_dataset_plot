@@ -1,0 +1,42 @@
+{
+  "data_dir": "/path/to/retained_csv_root",
+  "metadata_dir": "/path/to/json_metadata",
+  "output_dir": "/path/to/results/wind_corpus_v1",
+  "segments_only": true,
+  "palette": "viridis",
+  "defaults": {
+    "time_column": null,
+    "value_column": null,
+    "value_unit": null,
+    "rated_capacity_kw": null,
+    "timezone": "UTC",
+    "timestamp_format": null,
+    "timestamp_unit": null,
+    "timestamp_position": "start",
+    "interval_minutes": null,
+    "csv_separator": ","
+  },
+  "datasets": {},
+  "source_dataset_map": {},
+  "analysis": {
+    "clock_timezone": "UTC",
+    "low_cf": 0.05,
+    "high_cf": 0.8,
+    "min_stl_cycles": 3,
+    "stl_window_hours": 1344,
+    "max_stl_windows": 0,
+    "max_daily_profiles_per_dataset": 0,
+    "clusters": "auto",
+    "max_clusters": 12,
+    "cluster_fit_limit": 5000,
+    "silhouette_limit": 1500,
+    "seed": 20260921
+  },
+  "plots": {
+    "panels": ["a", "b", "c", "d", "e", "f"],
+    "formats": ["png", "pdf", "svg"],
+    "dpi": 300,
+    "rows_per_page": 45,
+    "combined": true
+  }
+}

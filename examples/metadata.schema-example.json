@@ -1,0 +1,9 @@
+{
+  "dataset_name": "farm_A",
+  "site_type": "onshore",
+  "rated_capacity_kw": 50000,
+  "value_unit": "kW",
+  "description": {
+    "note": "Schema example only. Replace with the real original dataset ID, capacity and units."
+  }
+}
