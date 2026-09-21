@@ -1,0 +1,22 @@
+{
+  "data_dir": "/path/to/aligned_15min",
+  "metadata_dir": "/path/to/json_metadata",
+  "output_dir": "./results/aligned_farms",
+  "palette": "viridis",
+  "inputs": {
+    "segments_manifest": "./整理/farm_data_paths_131/farm_paths_segmented_long_131.csv",
+    "capacity_table": "./整理/farm_capacity_units_131.csv",
+    "original_manifest": "./整理/farm_data_paths_131/farm_paths_original_131.csv",
+    "segment_layer": "aligned_segments",
+    "path_prefix_map": {}
+  },
+  "defaults": {
+    "value_column": "power",
+    "value_unit": "MW",
+    "timestamp_position": "instantaneous",
+    "timezone": "UTC",
+    "time_column": null,
+    "timestamp_format": null,
+    "interval_minutes": 15
+  }
+}

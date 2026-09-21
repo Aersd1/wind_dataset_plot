@@ -16,6 +16,7 @@ class Dataset:
     metadata_files: list = field(default_factory=list)
     site_type: str = ""
     capacity_kw: float | None = None
+    provenance: dict = field(default_factory=dict)
 
 
 def read_header(path):
@@ -35,6 +36,9 @@ def source_stem(source):
 
 
 def discover(cfg):
+    if cfg.get("inputs", {}).get("segments_manifest"):
+        from .manifests import discover_manifest
+        return discover_manifest(cfg)
     root = Path(cfg["data_dir"])
     if not root.is_dir():
         raise ValueError(f"CSV directory does not exist: {root}")
@@ -92,7 +96,7 @@ def canonical_key(text):
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def metadata_fields(obj):
+def metadata_fields(obj, site_only=False):
     pairs = list(walk_dict(obj))
     types = set()
     capacities = []
@@ -103,20 +107,20 @@ def metadata_fields(obj):
             text = str(value).strip().lower()
             if text in ("onshore", "offshore"):
                 types.add(text)
-        if key in ("ratedcapacitykw", "capacitykw", "installedcapacitykw",
+        if not site_only and key in ("ratedcapacitykw", "capacitykw", "installedcapacitykw",
                    "ratedcapacitymw", "capacitymw", "installedcapacitymw"):
             try:
                 capacities.append(float(value) * (1000 if key.endswith("mw") else 1))
             except (ValueError, TypeError):
                 raise ValueError(f"Invalid structured capacity {key}={value!r}")
-        if key in ("valueunit", "powerunit", "energyunit") and value:
+        if not site_only and key in ("valueunit", "powerunit", "energyunit") and value:
             units.add(normalize_unit(str(value)))
     if not types:
         # Never search bare 'offshore' across environmental text.
         for key, value in pairs:
             if key in ("farm_description", "site_description") and isinstance(value, str):
                 types.update(re.findall(r"\b(onshore|offshore)\s+wind\s+farm\b", value.lower()))
-    if not capacities:
+    if not capacities and not site_only:
         for key, value in pairs:
             if key in ("farm_description", "site_description") and isinstance(value, str):
                 for number, unit in re.findall(
@@ -160,7 +164,7 @@ def resolve_metadata(datasets, cfg):
             declared = obj.get("dataset_id") or obj.get("dataset_name") or obj.get("description", {}).get("dataset_name")
             if declared and declared != expected:
                 raise ValueError(f"{path}: JSON dataset name {declared!r} != {expected!r}; set metadata_id explicitly")
-            fields = metadata_fields(obj)
+            fields = metadata_fields(obj, site_only=bool(ds.provenance))
             for key, value in fields.items():
                 if value is not None and key in combined and combined[key] != value:
                     raise ValueError(f"{ds.id}: conflicting {key} across JSON files")
@@ -171,13 +175,18 @@ def resolve_metadata(datasets, cfg):
         if ds.site_type not in ("onshore", "offshore"):
             raise ValueError(f"{ds.id}: JSON needs site_type onshore/offshore, or set an explicit override")
         ds.capacity_kw = opts.get("rated_capacity_kw") if opts.get("rated_capacity_kw") is not None else combined.get("capacity_kw")
+        if ds.provenance:
+            ds.capacity_kw = ds.provenance["capacity_kw"]
+            table_site = ds.provenance["capacity_table_site_type"]
+            if table_site and table_site != ds.site_type:
+                raise ValueError(f"{ds.id}: JSON site type disagrees with capacity table")
         opts["value_unit"] = normalize_unit(opts.get("value_unit") or combined.get("value_unit"))
         if ds.capacity_kw is not None and (not np.isfinite(ds.capacity_kw) or ds.capacity_kw <= 0):
             raise ValueError(f"{ds.id}: rated capacity must be positive")
         if opts["value_unit"] != "capacity_factor" and ds.capacity_kw is None:
             raise ValueError(f"{ds.id}: rated capacity is required; never use observed maximum as capacity")
-        if opts["timestamp_position"] not in ("start", "end"):
-            raise ValueError("timestamp_position must be start or end")
+        if opts["timestamp_position"] not in ("start", "end", "instantaneous"):
+            raise ValueError("timestamp_position must be start, end or instantaneous")
     return datasets
 
 

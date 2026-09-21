@@ -13,7 +13,7 @@ def hourly_runs(runs, step):
     per_hour = int(pd.Timedelta("1h").value // step)
     result = []
     for run in runs:
-        # The input values represent regular intervals; bins must tile clock hours exactly.
+        # Regular power samples (or converted interval means) must align with clock hours.
         if np.any(run.index.asi8 % step):
             raise ValueError("Native intervals are not aligned to clock-hour boundaries")
         resampler = run.resample("1h", label="left", closed="left")
@@ -75,6 +75,9 @@ def analyze_dataset(ds, cfg):
     q = np.quantile(values,[.1,.25,.5,.75,.9])
     a = cfg["analysis"]
     summary = {"dataset_id": ds.id, "label": ds.options.get("label",ds.id), "site_type": ds.site_type,
+               "capacity_kw": ds.capacity_kw, "capacity_source": ds.provenance.get("capacity_source", "JSON/config"),
+               "capacity_is_proxy": ds.provenance.get("capacity_is_proxy", False),
+               "input_layer": ds.provenance.get("layer", "directory_scan"),
                "n_segments":len(ds.files), "n_hourly":len(values), "cf_p10":q[0], "cf_p25":q[1],
                "cf_median":q[2], "cf_p75":q[3], "cf_p90":q[4], "cf_mean":values.mean(),
                "cf_iqr":q[3]-q[1], "ramp_p95":np.quantile(ramps,.95) if len(ramps) else np.nan,

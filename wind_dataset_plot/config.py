@@ -7,6 +7,9 @@ DEFAULTS = {
     "data_dir": "data", "metadata_dir": "metadata", "output_dir": "results",
     "csv_glob": "**/*.csv", "segments_only": True, "palette": "viridis",
     "source_dataset_map": {}, "datasets": {},
+    "inputs": {"segments_manifest": None, "capacity_table": None,
+               "original_manifest": None, "segment_layer": "aligned_segments",
+               "path_prefix_map": {}},
     "defaults": {
         "time_column": None, "value_column": None, "value_unit": None,
         "rated_capacity_kw": None, "timezone": "UTC", "timestamp_format": None,
@@ -33,7 +36,7 @@ def load_config(path):
     for key, value in supplied.items():
         if key not in cfg:
             raise ValueError(f"Unknown config key: {key}")
-        if key in ("defaults", "analysis", "plots"):
+        if key in ("defaults", "analysis", "plots", "inputs"):
             unknown = set(value) - set(cfg[key])
             if unknown:
                 raise ValueError(f"Unknown {key} keys: {sorted(unknown)}")
@@ -50,6 +53,14 @@ def load_config(path):
         if opts.get("metadata_file"):
             p = Path(opts["metadata_file"]).expanduser()
             opts["metadata_file"] = str((path.parent / p).resolve() if not p.is_absolute() else p)
+    for key in ("segments_manifest", "capacity_table", "original_manifest"):
+        if cfg["inputs"][key]:
+            p = Path(cfg["inputs"][key]).expanduser()
+            cfg["inputs"][key] = str((path.parent / p).resolve() if not p.is_absolute() else p)
+    if cfg["inputs"]["segment_layer"] not in ("prefer_data_process", "data_process", "aligned_segments"):
+        raise ValueError("segment_layer must be prefer_data_process, data_process or aligned_segments")
+    if cfg["inputs"]["segments_manifest"] and not cfg["inputs"]["capacity_table"]:
+        raise ValueError("Manifest input requires capacity_table")
     if cfg["palette"] not in ("viridis", "plasma"):
         raise ValueError("palette must be viridis or plasma")
     a, p = cfg["analysis"], cfg["plots"]

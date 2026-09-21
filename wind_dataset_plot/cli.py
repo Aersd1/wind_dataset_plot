@@ -32,7 +32,7 @@ def export(result,cfg,datasets,ignored):
               "original_dataset_count":len(datasets),"segment_count":sum(len(d.files) for d in datasets),
               "selected_daily_profiles":len(result["daily"]),"actual_pattern_count":len(result["patterns"]),
               "datasets":[{"id":d.id,"site_type":d.site_type,"capacity_kw":d.capacity_kw,
-                           "options":d.options,"sources":sorted(d.sources),
+                           "options":d.options,"sources":sorted(d.sources), "provenance":d.provenance,
                            "metadata_files":[str(p) for p in d.metadata_files]} for d in datasets]}
     (out/"run_manifest.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding="utf-8")
     n=len(datasets); offshore=sum(d.site_type=="offshore" for d in datasets)
@@ -41,7 +41,8 @@ def export(result,cfg,datasets,ignored):
 The analysis comprises {n} original datasets ({offshore} offshore and {n-offshore} onshore),
 represented by {sum(len(d.files) for d in datasets)} retained CSV segments. Segment files from
 the same source are counted once. All temporal calculations preserve gaps and file boundaries.
-Statistics use fully observed hourly means of capacity factor. No interpolation, min–max
+Statistics use fully observed hourly sample means of capacity factor. Instantaneous MW power
+is divided by capacity in MW without an interval-duration conversion. No interpolation, min–max
 normalization, or clipping to [0,1] is applied. Raw invalid and out-of-range counts are audited.
 
 (a) Standardized operating descriptors: CF interquartile range, 95th percentile of absolute
@@ -61,6 +62,9 @@ manifest for the fitting sample limit, chosen K, sampling settings and library v
 Only requested panels are generated. No silhouette score, farm count, year range or percentage
 from an earlier manuscript is reused. This description does not infer model forecasting skill.
 """
+    proxies = [d.id for d in datasets if d.provenance.get("capacity_is_proxy")]
+    if proxies:
+        text += "\nCapacity denominator caveat: the supplied table uses observed-maximum proxies, not verified rated capacities, for " + ", ".join(proxies) + ". Review these denominators before interpreting normalized power as physical capacity factor.\n"
     (out/"figure_description.md").write_text(text,encoding="utf-8")
 
 
@@ -68,12 +72,18 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description="Calculate wind-corpus plots from retained raw CSV segments and JSON metadata.")
     parser.add_argument("--config",required=True,help="JSON config; relative paths are resolved beside this file")
     parser.add_argument("--validate-only",action="store_true",help="Check grouping, metadata, units and CSV column names only; do not analyze/plot")
+    parser.add_argument("--inspect-manifests",action="store_true",help="Check only path/capacity index tables; never access raw time series or JSON, or create outputs")
     parser.add_argument("--overwrite",action="store_true",help="Allow output into a nonempty existing output directory")
     args=parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO,format="%(levelname)s: %(message)s")
     logging.getLogger("fontTools").setLevel(logging.WARNING)
     try:
         cfg=load_config(args.config)
+        if args.inspect_manifests:
+            from .manifests import read_plan
+            _, report = read_plan(cfg)
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0
         out=Path(cfg["output_dir"])
         data=Path(cfg["data_dir"])
         if out==data or out.is_relative_to(data) or data.is_relative_to(out):

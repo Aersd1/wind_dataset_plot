@@ -1,6 +1,6 @@
 # Wind dataset plots
 
-从 **`linear_artifact_remover.py` 切割后保留的、未归一化 CSV 时序**计算数据集特征，生成论文训练语料多样性图。JSON 只提供海陆类型、容量等元数据；不使用 JSON 的 `history`、`statistics` 或预测结果。
+从 **切割后保留的、未归一化 CSV 时序**计算数据集特征，生成论文训练语料多样性图。支持场站路径清单，也支持 `linear_artifact_remover.py` 的来源注释。清单模式使用容量表，并从 JSON 读取海陆类型；不使用 JSON 的 `history`、`statistics` 或预测结果。
 
 项目没有附带研究原始数据或预计算论文结果。测试只使用代码临时生成的小型合成数据。
 
@@ -17,6 +17,50 @@ python -m pip install -e .
 ```
 
 Windows 激活命令为 `.venv\Scripts\Activate.ps1`。也可以不安装本项目：安装 `requirements.txt` 后，从项目根目录执行 `python -m wind_dataset_plot`。
+
+### 使用本次提供的容量表和路径清单（推荐入口）
+
+复制 `examples/config.manifests.json` 到项目根目录，命名为 `local_config.json`。将 `整理/` 文件夹放在配置文件旁，或将配置中的三个表路径改为服务器上的实际位置；`metadata_dir` 填写场站 JSON 的根目录。
+
+```text
+local_config.json
+整理/
+  farm_capacity_units_131.csv
+  farm_data_paths_131/
+    farm_paths_segmented_long_131.csv
+    farm_paths_segmented_131.csv
+    farm_paths_original_131.csv
+```
+
+本次已明确选择 **`segment_layer: "aligned_segments"`**。提供的长表共有 2,168 行，其中仅取 aligned 的 **131 个场站、1,770 个片段**，排除 data_process 的 398 行。这些是对本次索引表的核查结果，不是程序写死的数量。
+
+- 按精确的 `name` + `source` 连接场站、容量和来源。`name` 保留完整数字后缀，片段只归属于其对应场站。
+- 长表读取 `layer`、`segment_csv_path`。也可将 `segments_manifest` 改为 `farm_paths_segmented_131.csv`，程序分别拆分 `aligned_segment_paths` / `data_process_segment_paths` 中的 `|`；两种表等价，任选其一。
+- `farm_paths_original_131.csv` 仅用于校验场站并记录原始来源，**不读其中时序、不加入计算**。
+- 容量采用 `rated_power_kW_used`，并与 `rated_power_MW_used` 校验。CSV 的 `power` 明确为瞬时 MW，计算 `CF = power_MW × 1000 / rated_power_kW_used`；不乘除 15 分钟或一小时。小时值为完整小时内等间隔样本的算术均值，不是累计发电量。
+- JSON 仅提供 `onshore` / `offshore`。在清单模式下，JSON 的容量、单位叙述、z-score 历史和统计值均不覆盖容量表与 MW 定义。若 JSON 海陆类型与表中 `onshore_offshore` 不一致，程序报错。
+- 配置示例按 `aligned_15min` 设置采样间隔 15 分钟。时间列可以自动识别；时间格式与时区须以实际 CSV 为准。若日期为 `18/01/01 00:45`，需明确设 `timestamp_format: "%y/%m/%d %H:%M"`；若是 ISO 日期则保留 `null`。不要从 JSON 的窗口时间格式推断 CSV。
+
+先在本地或服务器只核对清单（无需访问服务器时序或 JSON，不生成图和结果文件）：
+
+```bash
+python -m wind_dataset_plot --config local_config.json --inspect-manifests
+```
+
+服务器数据和 JSON 就绪后，验证路径、海陆类型和 CSV 列名；第二条命令才开始正式计算：
+
+```bash
+python -m wind_dataset_plot --config local_config.json --validate-only
+python -m wind_dataset_plot --config local_config.json
+```
+
+若服务器挂载点变化，可配置 `inputs.path_prefix_map`，按路径边界替换最长匹配的前缀，例如 `{"/old/mount": "/new/mount"}`。路径清单内的相对路径以清单所在目录为基准。缺失已选择的文件直接报错，不偷偷改用另一层。
+
+**容量来源核查：** 当前表中 `BANC DE GUERANDE 2`、`BRDUW-1`、`BRYBW-1`、`GULLRWF1` 的 `rated_capacity_source` 标明使用观测最大功率替代容量。程序按提供表使用这些分母，同时在日志、`dataset_summary.csv`、`run_manifest.json` 和图注草稿中标记 `capacity_is_proxy`，不把它们当作已核实的额定容量。正式论文解释物理 CF 前应核实这四项。程序不会自行从真实时序估算或替换容量。
+
+`inputs.segment_layer` 也支持显式选择 `data_process`，或 `prefer_data_process`（逐场站优先该层、缺失才选 aligned，并记录回退名单）。**本次配置与默认值均为 aligned_segments；任何模式都不会合并两层。** 场站数、片段数由输入动态决定。
+
+下文的目录扫描方式保留给没有这些索引表的数据；配置 `inputs.segments_manifest` 后，以清单作为输入，不再扫描 `data_dir`。
 
 ## 2. 数据目录与“同一个数据集”的定义
 
@@ -90,13 +134,13 @@ timestamp,power
 - 兼容现有描述中的 `summing to roughly 106.6 MW of rated capacity`；若描述只是粗略值，正式分析应提供经核实的结构化容量或配置覆盖值。
 - 文件名自动匹配 `数据集名.json` 或 `数据集名_数字.json`。多个窗口 JSON 的元数据必须一致。
 - JSON 内若提供 `description.dataset_name` / `dataset_name` / `dataset_id`，会校验其与目标元数据 ID 一致。
-- 不支持凭文字中的风机型号/单机功率猜测总容量，也不会把观测最大值当作装机容量。
+- 不自行凭文字中的风机型号/单机功率猜测总容量，也不自行用观测最大值估计装机容量；清单模式显式提供的容量替代值会按前述规则标记。
 
 **单位必须明确提供。** 配置项优先于结构化 JSON；不会从 `value` 列、数值大小或自由文本的 `kwh` 猜单位。
 
 | CSV 数值含义 | `value_unit` | 容量因子计算 |
 |---|---|---|
-| 平均功率 | `W` / `kW` / `MW` | 换算为 kW 后除以额定容量 kW |
+| 瞬时功率或区间平均功率 | `W` / `kW` / `MW` | 换算为 kW 后除以额定容量 kW |
 | 每采样间隔的能量 | `Wh` / `kWh` / `MWh` | 换算为 kWh，除以间隔小时数，再除以额定容量 kW |
 | 已有容量因子 | `capacity_factor` / `cf` | 直接使用，无需额定容量 |
 
@@ -210,7 +254,7 @@ strength = max(0, 1 - Var(remainder) / Var(seasonal + remainder))
 
 ### 解释限制
 
-这里的“原始时序”指保留片段内未归一化的原始数值，不代表恢复被删除区间。移除长常数段/线性段后，出力分布、爬坡比例和周期性会受到保留规则影响。本文图应该表述为 **retained training corpus** 的描述，不能代表未切割完整风场的无偏长期统计。
+这里的“原始时序”指所选层片段内未归一化的原始数值，不代表恢复被删除区间。出力分布、爬坡比例和周期性会受到该层保留规则影响。采用 `aligned_segments` 时应表述为 **retained aligned corpus**；只有确认它就是模型使用的训练语料时，才称为 retained training corpus。不能代表未切割完整风场的无偏长期统计。
 
 CF 超出 [0,1] 会保留、审计并警告；不会静默裁剪。请检查真实单位、容量、限电/异常记录等。特征值差异和模式多样性不能单独证明模型预测性能提升。
 
