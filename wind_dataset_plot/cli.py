@@ -139,7 +139,11 @@ Additional figure | Differences in wind-farm operating characteristics.
 Each point represents one original farm. Panels show (a) median hourly output, (b) the
 within-farm interquartile range of hourly output and (c) the within-farm 95th percentile
 of absolute consecutive-hour changes, calculated only within continuous retained segments.
-Panel a uses percent of capacity; b/c use percentage points. Half-violins summarize the
+All three axes express the power level, range or change as a percentage of the farm's
+capacity denominator. For b/c these numbers equal percentage-point differences in
+normalized output, not relative changes from the preceding hour. The short axis labels
+are defined precisely here: typical output is the median, typical range is the IQR,
+and large hourly change is the 95th percentile of absolute hourly changes. Half-violins summarize the
 distribution of farm-level descriptors, separately for offshore/onshore farms, using
 Gaussian KDE with Scott bandwidth truncated at the observed group extrema. Maximum
 widths are equal across groups and do not encode group size. Black lines mark group

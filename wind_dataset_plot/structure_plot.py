@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
 METRICS=(
-    ("cf_median","Typical output","Median output (% of capacity)"),
-    ("cf_iqr","Output spread","Middle 50% output range\n(percentage points)"),
-    ("ramp_p95","Large hourly changes","95th percentile of hourly change\n(percentage points)"),
+    ("cf_median","Typical output","Typical power output\n(% of farm capacity)"),
+    ("cf_iqr","Output spread","Typical output range\n(% of farm capacity)"),
+    ("ramp_p95","Large hourly changes","Large hourly power change\n(% of farm capacity)"),
 )
 
 
