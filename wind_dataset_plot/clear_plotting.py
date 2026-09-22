@@ -162,8 +162,12 @@ def plot_clear(result,cfg):
               "svg.fonttype":"none","axes.grid":False}
     with plt.rc_context(settings):
         for panel in selected:
-            fig,ax=plt.subplots(figsize=(89/25.4,80/25.4))
-            fig.subplots_adjust(left=.21,right=.90,bottom=.21,top=.88)
+            if panel=="f":
+                fig,ax=plt.subplots(figsize=(70/25.4,95/25.4))
+                fig.subplots_adjust(left=.26,right=.84,bottom=.20,top=.88)
+            else:
+                fig,ax=plt.subplots(figsize=(89/25.4,80/25.4))
+                fig.subplots_adjust(left=.21,right=.90,bottom=.21,top=.88)
             draw_clear(panel,ax,result,cfg)
             if result.get("preview_label"):
                 fig.text(.5,.98,result["preview_label"],ha="center",va="top",fontsize=5.5,color=".35")

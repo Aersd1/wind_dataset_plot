@@ -77,7 +77,7 @@ python -m wind_dataset_plot --config local_config.json
 
 ## Nature 排版
 
-主图画布固定为 183 × 145 mm，普通文字 5.5–7 pt，面板字母 8 pt；不用 tight 裁切改变最终物理尺寸。单面板为 89 × 80 mm。PDF 保留可编辑文字，优先 Arial，服务器缺少时回退到其他无衬线字体。默认 RGB 色系为 plasma，并以形状/线型区分海陆组；也支持 viridis。已有服务器配置若显式设置了 viridis，需要改为 `"palette": "plasma"`。
+主图画布固定为 183 × 145 mm，普通文字 5.5–7 pt，面板字母 8 pt；不用 tight 裁切改变最终物理尺寸。普通单面板为 89 × 80 mm；S2 使用较窄的 70 × 95 mm 竖向画布，缩短热图横向跨度，并保留右侧占比和底部色条。PDF 保留可编辑文字，优先 Arial，服务器缺少时回退到其他无衬线字体。默认 RGB 色系为 plasma，并以形状/线型区分海陆组；也支持 viridis。已有服务器配置若显式设置了 viridis，需要改为 `"palette": "plasma"`。
 
 这按 Nature 官方主图指南的尺寸和字号范围设计，但不表示期刊已审核或接收。正式输出后仍需检查真实数据下的边界、长日期标签和有效样本数。
 
