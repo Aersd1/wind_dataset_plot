@@ -25,6 +25,19 @@ def export(result,cfg,datasets,ignored):
         pattern=result["patterns"].get("pattern",pd.Series(dtype=str))).to_csv(tables/"pattern_medians.csv",index=False)
     # Profile rows align exactly with daily_statistics.csv for reproducibility.
     np.savez_compressed(tables/"daily_profiles.npz",profiles=result["profiles"])
+    if cfg["plots"].get("layout","clear")=="clear":
+        from .clear_plotting import group_output, monthly_coverage, daily_change_distribution
+        rows=[]
+        bounds=[(None,0)]+[(i*10,(i+1)*10) for i in range(10)]+[(100,None)]
+        for site,n,values in group_output(result["summary"]):
+            rows.extend({"site_type":site,"n_farms":n,"bin":i,"lower_percent":lo,
+                         "upper_percent":hi,"mean_time_percent":float(values[i])}
+                        for i,(lo,hi) in enumerate(bounds))
+        pd.DataFrame(rows).to_csv(tables/"output_distribution.csv",index=False)
+        monthly_coverage(result["coverage"]).to_csv(tables/"coverage_monthly.csv",index_label="month_utc")
+        x,y=daily_change_distribution(result["daily"])
+        pd.DataFrame({"mean_hourly_change_pp":x,"days_at_or_below_percent":y}).to_csv(
+            tables/"daily_change_distribution.csv",index=False)
     versions={name:importlib.metadata.version(name) for name in
               ("numpy","pandas","matplotlib","scipy","statsmodels","scikit-learn")}
     manifest={"created_utc":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
@@ -73,6 +86,49 @@ is retained in the audit tables for correct segment grouping and reproducibility
 
 Only requested panels are generated. No silhouette score, farm count, year range or percentage
 from an earlier manuscript is reused. This description does not infer model forecasting skill.
+"""
+    if cfg["plots"].get("layout","clear")=="clear":
+        text=f"""# Figure 5 | Output levels, variability and temporal coverage of the wind-power corpus
+
+The corpus contains {n} farms ({offshore} offshore and {n-offshore} onshore), represented by
+{sum(len(d.files) for d in datasets)} retained CSV segments. Power is expressed as a percentage
+of the capacity denominator recorded for each farm. Hourly values average complete native
+samples. Segment boundaries and gaps are preserved; out-of-range output is not clipped.
+
+(a) Two output-frequency curves, connecting the centres of 10-percentage-point output bins.
+Frequencies are calculated per
+farm, then averaged within offshore/onshore groups, giving farms equal weight regardless
+of record length. Each group's bin frequencies sum to 100%. The lines connect measured bin
+frequencies, not a fitted probability model; shading is decorative, not an uncertainty band.
+Bins below 0% and above 100% are shown as separate open markers whenever present; exact 0%
+and 100% belong to the first and last regular bins. No bars or z-scores are used.
+(b) Mean output versus mean absolute change between consecutive hours, with one anonymous
+point per farm. Changes are in percentage points and never cross gaps or segment boundaries.
+(c) Monthly mean number of distinct farms with complete hourly records. Each farm is counted
+once per hour; zero-coverage hours inside the corpus observation span are included. Boundary
+months use only hours within that span. Points represent months and lines connect them;
+shading is a visual aid. These counts measure record availability, not operating farms.
+(d) Empirical cumulative distribution of mean absolute within-day hourly change, using
+{len(result['daily'])} selected complete farm-days. The x axis measures the mean absolute
+change over 23 consecutive-hour pairs in each day, in percentage points; the y axis gives
+the percentage of selected days at or below that value. Labels mark the smallest observed
+thresholds reaching at least 50% and 90% of days. No binning or smoothing is used.
+Days receive equal weight; farms with longer records may contribute more days. The plot
+does not describe the largest hourly change or a daily maximum-minus-minimum range.
+The clock timezone is {cfg['analysis']['clock_timezone']}; no local solar-time interpretation is implied.
+
+Supplement S1 (panel e): distributions of paired 24-h and 168-h STL strength estimates.
+Boxes show median and quartiles, whiskers extend to the most extreme values within 1.5 IQR,
+and points show outliers. The two STL decompositions are fitted independently on eligible
+continuous windows and summarized with window-length weights; 168-h strength is not an
+isolated weekly component after removal of daily structure.
+Supplement S2 (panel f): every cluster's hourly median and share of selected farm-days.
+Clustering uses unstandardized 24-dimensional capacity-normalized profiles, so both output
+level and temporal shape contribute. The patterns are descriptive, not verified physical regimes.
+
+Only requested panels are generated. Main panels a-d form a 183 x 145 mm figure with editable
+text; e/f are supplemental. No bars, z-scores, quantile envelopes or multiple daily curves appear in the main figure.
+No statistical significance, forecasting skill or causal interpretation is inferred.
 """
     proxies = [d.id for d in datasets if d.provenance.get("capacity_is_proxy")]
     if proxies:

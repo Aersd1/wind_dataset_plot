@@ -23,7 +23,7 @@ DEFAULTS = {
         "clusters": "auto", "max_clusters": 12, "cluster_fit_limit": 5000,
         "silhouette_limit": 1500, "seed": 20260921,
     },
-    "plots": {"panels": ["a", "b", "c", "d", "e", "f"],
+    "plots": {"layout": "clear", "panels": ["a", "b", "c", "d", "e", "f"],
               "formats": ["png", "pdf", "svg"], "dpi": 300,
               "rows_per_page": 45, "combined": True},  # rows_per_page: accepted legacy setting; unused
 }
@@ -64,6 +64,8 @@ def load_config(path):
     if cfg["palette"] not in ("viridis", "plasma"):
         raise ValueError("palette must be viridis or plasma")
     a, p = cfg["analysis"], cfg["plots"]
+    if p["layout"] not in ("clear", "legacy"):
+        raise ValueError("plots.layout must be clear or legacy")
     if not 0 <= a["low_cf"] < a["high_cf"] <= 1:
         raise ValueError("Require 0 <= low_cf < high_cf <= 1")
     for key in ("max_stl_windows", "max_daily_profiles_per_dataset"):

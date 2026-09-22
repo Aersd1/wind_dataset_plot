@@ -8,6 +8,19 @@ from .io import load_runs
 LOG = logging.getLogger(__name__)
 
 
+def output_fractions(values):
+    """Per-farm time fractions: <0, ten 10%-wide bins in [0,1], >1.
+
+    Exact zero and one are included in the finite bins; outliers are never clipped.
+    """
+    values=np.asarray(values,float)
+    values=values[np.isfinite(values)]
+    if not len(values): return np.full(12,np.nan)
+    inside=values[(values>=0)&(values<=1)]
+    counts=np.r_[np.sum(values<0),np.histogram(inside,bins=np.linspace(0,1,11))[0],np.sum(values>1)]
+    return counts/len(values)
+
+
 def hourly_runs(runs, step):
     """Retain only fully observed clock hours; never interpolate or cross segment boundaries."""
     per_hour = int(pd.Timedelta("1h").value // step)
@@ -81,9 +94,12 @@ def analyze_dataset(ds, cfg):
                "n_segments":len(ds.files), "n_hourly":len(values), "cf_p10":q[0], "cf_p25":q[1],
                "cf_median":q[2], "cf_p75":q[3], "cf_p90":q[4], "cf_mean":values.mean(),
                "cf_iqr":q[3]-q[1], "ramp_p95":np.quantile(ramps,.95) if len(ramps) else np.nan,
+               "ramp_mean":ramps.mean() if len(ramps) else np.nan,
                "low_fraction":np.mean(values<a["low_cf"]), "high_fraction":np.mean(values>a["high_cf"])}
+    summary.update({f"output_fraction_{j:02}":v for j,v in enumerate(output_fractions(values))})
     for name,period in (("daily",24),("weekly",168)):
-        if "d" in cfg["plots"]["panels"]:
+        seasonal_panel="e" if cfg["plots"].get("layout","clear")=="clear" else "d"
+        if seasonal_panel in cfg["plots"]["panels"]:
             score,n,used,eligible = seasonal_strength(hourly,period,a)
         else:
             score,n,used,eligible=np.nan,0,0,0

@@ -161,6 +161,9 @@ def save(fig,path,cfg,outputs):
 
 
 def plot_all(result,cfg):
+    if cfg["plots"].get("layout","clear")=="clear":
+        from .clear_plotting import plot_clear
+        return plot_clear(result,cfg)
     style()
     out=Path(cfg["output_dir"])/"figures"; out.mkdir(parents=True,exist_ok=True)
     outputs=[]; frame=result["summary"]; plots=cfg["plots"]

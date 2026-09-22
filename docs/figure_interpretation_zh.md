@@ -1,5 +1,7 @@
 # 图 5 的统计含义与论文表述
 
+> 这是 `plots.layout: "legacy"` 六面板方案的说明。当前默认四块主图请参见 [新版说明](clear_figure.md)，两版面板编号与含义不同。
+
 本说明对应当前六面板聚合方案，不对应 main.tex 中旧版 PCA/UMAP 图。当前提供的路径清单选择 aligned_segments：131 个场站、1,770 个片段。真实时序尚未在本地运行；示例图中的海陆数量、年份、聚类数和分布形状均为模拟，不可直接用于论文结果。
 
 建议总标题：**Operating characteristics and temporal structure of the wind-power corpus**。

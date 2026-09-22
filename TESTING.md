@@ -4,7 +4,7 @@ Verified on 2026-09-22, Windows, Python 3.14.3.
 
 ```text
 python -m unittest discover -s tests -v
-Ran 47 tests
+Ran 57 tests
 OK
 
 python -m pip check
@@ -21,6 +21,15 @@ scipy==1.18.0
 statsmodels==0.15.0
 scikit-learn==1.9.1
 ```
+
+The current default clear layout adds ten tests for exact histogram endpoints and outliers,
+equal farm weighting, mean changes that never cross cut boundaries, frequency curves without
+bars, monthly coverage with zero hours and partial boundary months, exact empirical daily
+change distributions (ties, constant zero changes and extreme values), main-only calculation
+without STL/clustering, empty-day placeholders,
+and a synthetic CLI export in PNG/PDF/SVG. Related assertions share test cases.
+The 183 x 145 mm combined PDF is rendered with Poppler for visual review; no real time-series
+analysis is run locally. Earlier layout tests explicitly select `layout: legacy`.
 
 The end-to-end test used only synthetic time series: two original datasets, one split into two retained CSV segments. It produced all six panels plus the combined figure in PNG, PDF and SVG. A separate test covered plasma and compatibility with the now-unused pagination setting.
 

@@ -33,6 +33,7 @@
     "seed": 20260921
   },
   "plots": {
+    "layout": "clear",
     "panels": ["a", "b", "c", "d", "e", "f"],
     "formats": ["png", "pdf", "svg"],
     "dpi": 300,

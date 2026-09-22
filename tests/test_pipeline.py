@@ -28,6 +28,7 @@ class Fixture(unittest.TestCase):
         self.cfg.update(data_dir=str(self.root/"raw"),metadata_dir=str(self.root/"meta"),output_dir=str(self.root/"results"))
         self.cfg["defaults"]["value_unit"]="kW"
         self.cfg["plots"].update(formats=["png"],dpi=90)
+        self.cfg["plots"]["layout"]="legacy"  # regression coverage for the previous presentation
         self.cfg["analysis"].update(clusters=2)
 
     def tearDown(self): self.temp.cleanup()

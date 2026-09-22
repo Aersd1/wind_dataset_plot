@@ -23,7 +23,7 @@ class AggregateTests(unittest.TestCase):
     def test_131_farms_have_seven_figures_without_identity_or_pagination(self):
         with tempfile.TemporaryDirectory() as temporary:
             cfg=copy.deepcopy(DEFAULTS); cfg["output_dir"]=temporary
-            cfg["plots"].update(formats=["svg"],rows_per_page=1)
+            cfg["plots"].update(formats=["svg"],rows_per_page=1,layout="legacy")
             result=make_preview(131)
             files=plot_all(result,cfg)
             self.assertEqual(len(files),7)
