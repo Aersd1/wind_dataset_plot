@@ -3,7 +3,7 @@
   "metadata_dir": "/path/to/json_metadata",
   "output_dir": "./results/aligned_farms_clear",
   "palette": "viridis",
-  "plots": {"layout": "clear", "panels": ["a", "b", "c", "d", "e", "f"]},
+  "plots": {"layout": "clear", "structure_comparison": true, "panels": ["a", "b", "c", "d", "e", "f"]},
   "inputs": {
     "segments_manifest": "./整理/farm_data_paths_131/farm_paths_segmented_long_131.csv",
     "capacity_table": "./整理/farm_capacity_units_131.csv",

@@ -176,4 +176,7 @@ def plot_clear(result,cfg):
             if result.get("preview_label"):
                 fig.text(.5,.99,result["preview_label"],ha="center",va="top",fontsize=6,color=".35")
             save_exact(fig,out/"figure5_clear",cfg,outputs)
+        if cfg["plots"].get("structure_comparison",True):
+            from .structure_plot import plot_structure
+            outputs.extend(plot_structure(result,cfg))
     return outputs

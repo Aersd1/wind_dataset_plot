@@ -36,6 +36,9 @@ def export(result,cfg,datasets,ignored):
         pd.DataFrame(rows).to_csv(tables/"output_distribution.csv",index=False)
         monthly_coverage(result["coverage"]).to_csv(tables/"coverage_monthly.csv",index_label="month_utc")
         group_monthly_output(result["summary"]).to_csv(tables/"monthly_output.csv",index=False)
+        if cfg["plots"].get("structure_comparison",True):
+            from .structure_plot import structure_summary
+            structure_summary(result["summary"]).to_csv(tables/"structure_summary.csv",index=False)
     versions={name:importlib.metadata.version(name) for name in
               ("numpy","pandas","matplotlib","scipy","statsmodels","scikit-learn")}
     manifest={"created_utc":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
@@ -129,6 +132,22 @@ level and temporal shape contribute. The patterns are descriptive, not verified 
 Only requested panels are generated. Main panels a-d form a 183 x 145 mm figure with editable
 text; e/f are supplemental. No bars, z-scores, quantile envelopes or multiple daily curves appear in the main figure.
 No statistical significance, forecasting skill or causal interpretation is inferred.
+"""
+        if cfg["plots"].get("structure_comparison",True):
+            text+="""
+Additional figure | Differences in wind-farm operating characteristics.
+Each point represents one original farm. Panels show (a) median hourly output, (b) the
+within-farm interquartile range of hourly output and (c) the within-farm 95th percentile
+of absolute consecutive-hour changes, calculated only within continuous retained segments.
+Panel a uses percent of capacity; b/c use percentage points. Half-violins summarize the
+distribution of farm-level descriptors, separately for offshore/onshore farms, using
+Gaussian KDE with Scott bandwidth truncated at the observed group extrema. Maximum
+widths are equal across groups and do not encode group size. Black lines mark group
+medians. Points are horizontally jittered for visibility; horizontal position within a
+group has no quantitative meaning. Constant/single-farm groups show points and a median
+without a density shape. Each farm receives equal weight; missing descriptors are omitted
+separately per panel, with valid counts shown. Shapes are descriptive, not confidence
+intervals or evidence of distinct physical classes. See tables/structure_summary.csv.
 """
     proxies = [d.id for d in datasets if d.provenance.get("capacity_is_proxy")]
     if proxies:

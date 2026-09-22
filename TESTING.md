@@ -4,7 +4,7 @@ Verified on 2026-09-22, Windows, Python 3.14.3.
 
 ```text
 python -m unittest discover -s tests -v
-Ran 59 tests
+Ran 64 tests
 OK
 
 python -m pip check
@@ -31,6 +31,12 @@ without STL/clustering, monthly output without complete days,
 and a synthetic CLI export in PNG/PDF/SVG. Related assertions share test cases.
 The 183 x 145 mm combined PDF is rendered with Poppler for visual review; no real time-series
 analysis is run locally. Earlier layout tests explicitly select `layout: legacy`.
+
+Five additional structure-figure tests verify equal farm weights and physical units, exact
+valid-point counts for 131 farms with metric-specific missing values, constant/single/empty
+groups without fabricated densities, rejection of duplicate farm IDs, and standalone
+summary-table export without displayed identities or overwriting an existing output.
+The structure PDF is 183 x 82 mm and is rendered and checked separately.
 
 The end-to-end test used only synthetic time series: two original datasets, one split into two retained CSV segments. It produced all six panels plus the combined figure in PNG, PDF and SVG. A separate test covered plasma and compatibility with the now-unused pagination setting.
 

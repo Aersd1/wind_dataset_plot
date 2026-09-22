@@ -25,7 +25,7 @@ DEFAULTS = {
     },
     "plots": {"layout": "clear", "panels": ["a", "b", "c", "d", "e", "f"],
               "formats": ["png", "pdf", "svg"], "dpi": 300,
-              "rows_per_page": 45, "combined": True},  # rows_per_page: accepted legacy setting; unused
+              "rows_per_page": 45, "combined": True, "structure_comparison": True},  # rows_per_page: legacy
 }
 
 
@@ -66,6 +66,8 @@ def load_config(path):
     a, p = cfg["analysis"], cfg["plots"]
     if p["layout"] not in ("clear", "legacy"):
         raise ValueError("plots.layout must be clear or legacy")
+    if not isinstance(p["structure_comparison"],bool):
+        raise ValueError("plots.structure_comparison must be true or false")
     if not 0 <= a["low_cf"] < a["high_cf"] <= 1:
         raise ValueError("Require 0 <= low_cf < high_cf <= 1")
     for key in ("max_stl_windows", "max_daily_profiles_per_dataset"):

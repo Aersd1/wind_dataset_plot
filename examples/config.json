@@ -34,6 +34,7 @@
   },
   "plots": {
     "layout": "clear",
+    "structure_comparison": true,
     "panels": ["a", "b", "c", "d", "e", "f"],
     "formats": ["png", "pdf", "svg"],
     "dpi": 300,

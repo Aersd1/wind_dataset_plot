@@ -35,6 +35,9 @@ class ClearPlotTests(Fixture):
         self.meta("farm"); self.cfg["plots"]["panels"]=["a","b"]
         result=analyze(self.datasets(),self.cfg)
         self.assertAlmostEqual(result["summary"].iloc[0].ramp_mean,.1)
+        self.assertAlmostEqual(result["summary"].iloc[0].ramp_p95,.1)
+        self.assertAlmostEqual(result["summary"].iloc[0].cf_median,.2)
+        self.assertAlmostEqual(result["summary"].iloc[0].cf_iqr,.7)
         self.assertAlmostEqual(result["summary"].filter(like="output_fraction_").iloc[0].sum(),1)
 
     def test_main_a_has_curves_not_bars_and_c_shows_monthly_coverage(self):
@@ -111,7 +114,9 @@ class ClearPlotTests(Fixture):
         self.cfg["plots"].update(panels=list("abcd"),formats=["png","pdf","svg"])
         self.assertEqual(main(["--config",str(self.config_file())]),0)
         out=Path(self.cfg["output_dir"])
-        self.assertEqual(len(list((out/"figures").glob("*.pdf"))),5)
+        self.assertEqual(len(list((out/"figures").glob("*.pdf"))),6)
+        self.assertTrue((out/"figures/farm_structure_comparison.pdf").is_file())
+        self.assertTrue((out/"tables/structure_summary.csv").is_file())
         self.assertTrue((out/"figures/figure5_clear.pdf").is_file())
         self.assertIn("Two output-frequency curves",(out/"figure_description.md").read_text())
         distribution=pd.read_csv(out/"tables/output_distribution.csv")

@@ -2,6 +2,8 @@
 
 **当前默认：四块主图 + 两张补充图。** a 为海陆出力分布曲线（无条形），b 为匿名风场散点，c 为月均可用风场数折线，d 为海上/陆上各月份的平均出力曲线。详见 [逐图解释、统计口径与英文图注](docs/clear_figure.md)。
 
+**新增独立结构对比图：** 半小提琴＋匿名风场散点，并排比较典型出力、出力范围和较大的小时变化。每个风场等权，见 [读图说明、英文图注及快速重绘命令](docs/structure_comparison.md)。clear 布局默认额外输出 `farm_structure_comparison`，可用 `plots.structure_comparison: false` 关闭。
+
 从 **切割后保留的、未归一化 CSV 时序**计算数据集特征，生成论文训练语料多样性图。支持场站路径清单，也支持 `linear_artifact_remover.py` 的来源注释。清单模式使用容量表，并从 JSON 读取海陆类型；不使用 JSON 的 `history`、`statistics` 或预测结果。
 
 项目没有附带研究原始数据或预计算论文结果。测试只使用代码临时生成的小型合成数据。
