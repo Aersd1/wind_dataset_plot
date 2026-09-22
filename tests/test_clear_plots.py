@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from test_pipeline import Fixture
 from wind_dataset_plot.analysis import output_fractions,analyze
-from wind_dataset_plot.clear_plotting import group_output,draw_clear,monthly_coverage,daily_change_distribution
+from wind_dataset_plot.clear_plotting import group_output,draw_clear,monthly_coverage,group_monthly_output
 from wind_dataset_plot.cli import main
 
 
@@ -51,27 +51,52 @@ class ClearPlotTests(Fixture):
             self.assertEqual(len(axes[1].images),0)
         finally: plt.close(fig)
 
-    def test_daily_cdf_counts_ties_and_preserves_extreme_changes(self):
-        result={"summary":pd.DataFrame({"site_type":["onshore"]}),
-                "daily":pd.DataFrame({"mean_abs_hourly_ramp":[.1,.2,.2,1.2,np.nan]})}
-        x,y=daily_change_distribution(result["daily"])
-        np.testing.assert_allclose(x,[10,20,120])
-        np.testing.assert_allclose(y,[25,75,100])
+    def test_monthly_curve_weights_farms_equally_and_breaks_at_missing_month(self):
+        rows=[]
+        for value,hours in ((.1,1),(.9,1000)):
+            rows.append({"site_type":"onshore",**{f"month_{m:02}_mean_cf":np.nan for m in range(1,13)},
+                         "month_01_mean_cf":value,"month_01_hours":hours,"month_03_mean_cf":1.2})
+        result={"summary":pd.DataFrame(rows)}
+        grouped=group_monthly_output(result["summary"])
+        onshore=grouped.loc[grouped.site_type.eq("onshore")].reset_index(drop=True)
+        self.assertAlmostEqual(onshore.mean_output_percent.iloc[0],50)
+        self.assertTrue(np.isnan(onshore.mean_output_percent.iloc[1]))
+        np.testing.assert_array_equal(onshore.n_farms.iloc[:3],[2,0,2])
         fig,ax=plt.subplots()
         try:
             draw_clear("d",ax,result,self.cfg)
-            np.testing.assert_allclose(ax.lines[0].get_ydata(),[0,25,75,100])
-            self.assertGreaterEqual(ax.get_xlim()[1],120)
+            np.testing.assert_allclose(ax.lines[0].get_ydata()[:3],[50,np.nan,120])
+            self.assertGreaterEqual(ax.get_ylim()[1],120)
         finally: plt.close(fig)
 
     def test_monthly_coverage_keeps_zero_hours_and_partial_boundary_months(self):
         counts=pd.Series([2,0,0,4],index=pd.date_range("2020-01-31 22:00",periods=4,freq="1h",tz="UTC"))
         np.testing.assert_allclose(monthly_coverage(counts),[1,2])
 
-    def test_constant_zero_daily_change_is_not_smoothed(self):
-        daily=pd.DataFrame({"mean_abs_hourly_ramp":[0,0,0]})
-        x,y=daily_change_distribution(daily)
-        np.testing.assert_array_equal(x,[0]); np.testing.assert_array_equal(y,[100])
+    def test_zero_monthly_output_is_data_not_missing(self):
+        frame=pd.DataFrame([{"site_type":"offshore",**{f"month_{m:02}_mean_cf":0. for m in range(1,13)}}])
+        data=group_monthly_output(frame)
+        np.testing.assert_array_equal(data.loc[data.site_type.eq("offshore"),"mean_output_percent"],np.zeros(12))
+        self.assertTrue(data.loc[data.site_type.eq("onshore"),"mean_output_percent"].isna().all())
+
+    def test_monthly_means_pool_same_calendar_month_across_years_and_segments(self):
+        self.segment("farm",0,[100,300],start="2020-01-01",freq="1h")
+        self.segment("farm",1,[900],start="2021-01-01",freq="1h")
+        self.segment("farm",2,[500],start="2021-02-01",freq="1h")
+        self.meta("farm"); self.cfg["plots"]["panels"]=["d"]
+        row=analyze(self.datasets(),self.cfg)["summary"].iloc[0]
+        self.assertAlmostEqual(row.month_01_mean_cf,1.3/3)
+        self.assertEqual(row.month_01_hours,3)
+        self.assertEqual(row.month_02_mean_cf,.5)
+        self.assertTrue(np.isnan(row.month_03_mean_cf))
+
+    def test_month_assignment_uses_configured_clock_timezone(self):
+        self.segment("farm",0,[500,500],start="2020-01-01 01:00",freq="1h")
+        self.meta("farm"); self.cfg["plots"]["panels"]=["d"]
+        self.cfg["analysis"]["clock_timezone"]="America/New_York"
+        row=analyze(self.datasets(),self.cfg)["summary"].iloc[0]
+        self.assertEqual(row.month_12_hours,2)
+        self.assertEqual(row.month_01_hours,0)
 
     def test_main_only_calculates_days_without_clustering_or_stl(self):
         self.segment("farm",0,500+np.sin(np.arange(96))*100,freq="1h"); self.meta("farm")
@@ -92,18 +117,20 @@ class ClearPlotTests(Fixture):
         distribution=pd.read_csv(out/"tables/output_distribution.csv")
         self.assertAlmostEqual(distribution.mean_time_percent.sum(),100)
         self.assertTrue((out/"tables/coverage_monthly.csv").is_file())
-        curve=pd.read_csv(out/"tables/daily_change_distribution.csv")
-        self.assertEqual(curve.days_at_or_below_percent.iloc[-1],100)
+        monthly=pd.read_csv(out/"tables/monthly_output.csv")
+        self.assertEqual(len(monthly),24)
+        self.assertEqual(monthly.n_farms.sum(),1)
         for p in (out/"figures").glob("*.svg"):
             self.assertNotIn("farm_seq",p.read_text())
 
-    def test_missing_days_has_no_fabricated_curves(self):
+    def test_monthly_output_does_not_require_complete_days(self):
         self.segment("farm",0,[100]*8); self.meta("farm")
         self.cfg["plots"]["panels"]=["d"]
         result=analyze(self.datasets(),self.cfg)
         fig,ax=plt.subplots()
         try:
             draw_clear("d",ax,result,self.cfg)
-            self.assertEqual(len(ax.lines),0)
-            self.assertTrue(any("No complete" in t.get_text() for t in ax.texts))
+            self.assertEqual(len(ax.lines),1)
+            self.assertAlmostEqual(ax.lines[0].get_ydata()[0],10)
+            self.assertTrue(np.isnan(ax.lines[0].get_ydata()[1:]).all())
         finally: plt.close(fig)

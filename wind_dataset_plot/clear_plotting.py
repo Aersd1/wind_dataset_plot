@@ -9,7 +9,7 @@ import matplotlib.dates as mdates
 from matplotlib.ticker import MaxNLocator
 
 TITLES={"a":"Output distribution", "b":"Differences among farms", "c":"Data available over time",
-        "d":"Daily variability", "e":"Repeated temporal structure", "f":"All daily profiles"}
+        "d":"Output by month", "e":"Repeated temporal structure", "f":"All daily profiles"}
 OUTPUT_COLUMNS=[f"output_fraction_{i:02}" for i in range(12)]
 
 
@@ -18,13 +18,20 @@ def monthly_coverage(counts):
     return counts.resample("MS").mean().rename("mean_farms_with_data")
 
 
-def daily_change_distribution(daily):
-    """Exact empirical CDF; tied days count separately, with no fitted smoothing."""
-    values=daily.mean_abs_hourly_ramp.to_numpy(float)*100
-    values=values[np.isfinite(values)]
-    if not len(values): return np.array([]),np.array([])
-    x,counts=np.unique(values,return_counts=True)
-    return x,100*np.cumsum(counts)/len(values)
+def group_monthly_output(frame):
+    """Equal farm weights within each site/month; missing months stay missing."""
+    columns=[f"month_{month:02}_mean_cf" for month in range(1,13)]
+    if set(columns)-set(frame.columns):
+        raise ValueError("Monthly output statistics missing; rerun analysis with the updated code")
+    rows=[]
+    for site in ("offshore","onshore"):
+        farms=frame.loc[frame.site_type.eq(site)]
+        for month,column in enumerate(columns,1):
+            values=farms[column].to_numpy(float)
+            values=values[np.isfinite(values)]
+            rows.append({"site_type":site,"month":month,"n_farms":len(values),
+                         "mean_output_percent":float(values.mean()*100) if len(values) else np.nan})
+    return pd.DataFrame(rows)
 
 
 def group_output(frame):
@@ -97,21 +104,19 @@ def draw_clear(panel,ax,result,cfg):
         ax.yaxis.set_major_locator(MaxNLocator(nbins=5,integer=True))
         ax.set_xlim(counts.index[0],counts.index[-1]+pd.offsets.MonthBegin(1))
     elif panel=="d":
-        daily=result["daily"]
-        if daily.empty: no_data(ax,"No complete daily records"); return
-        x,y=daily_change_distribution(daily)
-        if not len(x): no_data(ax,"No finite complete-day statistics"); return
-        ax.step(np.r_[0,x],np.r_[0,y],where="post",color=cmap(.25),lw=1.4)
-        thresholds=x[np.searchsorted(y,[50,90])]
-        for level,threshold in zip([50,90],thresholds):
-            ax.plot([0,threshold,threshold],[level,level,0],color=".65",lw=.6,ls="--",zorder=0)
-            ax.scatter([threshold],[level],s=12,color=cmap(.25),zorder=3)
-        ax.text(.97,.08,f"50% of days: ≤ {thresholds[0]:.2g} pp\n90% of days: ≤ {thresholds[1]:.2g} pp",
-                transform=ax.transAxes,ha="right",va="bottom",fontsize=6,
-                bbox=dict(facecolor="white",edgecolor="none",alpha=.9,pad=2))
-        ax.set(xlabel="Mean hourly change within a day\n(percentage points)",
-               ylabel="Days at or below this change (%)",xlim=(0,max(.1,float(x[-1]))*1.05),
-               ylim=(0,105),yticks=[0,25,50,75,90,100])
+        monthly=group_monthly_output(frame)
+        finite=monthly.mean_output_percent.dropna().to_numpy()
+        if not len(finite): no_data(ax,"No complete hourly records"); return
+        for j,site in enumerate(("offshore","onshore")):
+            data=monthly.loc[monthly.site_type.eq(site)]
+            if not data.n_farms.any(): continue
+            ax.plot(data.month,data.mean_output_percent,color=colours[site],lw=1.2,
+                    marker="o" if j==0 else "s",ms=2.3,ls="-" if j==0 else "--",label=site.title())
+        ax.set(xlabel="Month",ylabel="Mean output (% of capacity)",xlim=(.7,12.3),
+               xticks=range(1,13),xticklabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+               ylim=(min(0,float(finite.min())*1.1),max(100,float(finite.max())*1.1)))
+        ax.tick_params(axis="x",labelrotation=45)
+        ax.legend(frameon=False,fontsize=5.7,loc="upper right",handlelength=1.5)
     elif panel=="e":
         values=frame[["stl_daily","stl_weekly"]].to_numpy(float)
         values=values[np.isfinite(values).all(axis=1)]

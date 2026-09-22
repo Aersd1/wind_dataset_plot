@@ -26,7 +26,7 @@ def export(result,cfg,datasets,ignored):
     # Profile rows align exactly with daily_statistics.csv for reproducibility.
     np.savez_compressed(tables/"daily_profiles.npz",profiles=result["profiles"])
     if cfg["plots"].get("layout","clear")=="clear":
-        from .clear_plotting import group_output, monthly_coverage, daily_change_distribution
+        from .clear_plotting import group_output, monthly_coverage, group_monthly_output
         rows=[]
         bounds=[(None,0)]+[(i*10,(i+1)*10) for i in range(10)]+[(100,None)]
         for site,n,values in group_output(result["summary"]):
@@ -35,9 +35,7 @@ def export(result,cfg,datasets,ignored):
                         for i,(lo,hi) in enumerate(bounds))
         pd.DataFrame(rows).to_csv(tables/"output_distribution.csv",index=False)
         monthly_coverage(result["coverage"]).to_csv(tables/"coverage_monthly.csv",index_label="month_utc")
-        x,y=daily_change_distribution(result["daily"])
-        pd.DataFrame({"mean_hourly_change_pp":x,"days_at_or_below_percent":y}).to_csv(
-            tables/"daily_change_distribution.csv",index=False)
+        group_monthly_output(result["summary"]).to_csv(tables/"monthly_output.csv",index=False)
     versions={name:importlib.metadata.version(name) for name in
               ("numpy","pandas","matplotlib","scipy","statsmodels","scikit-learn")}
     manifest={"created_utc":datetime.now(timezone.utc).isoformat(),"python":platform.python_version(),
@@ -108,13 +106,15 @@ point per farm. Changes are in percentage points and never cross gaps or segment
 once per hour; zero-coverage hours inside the corpus observation span are included. Boundary
 months use only hours within that span. Points represent months and lines connect them;
 shading is a visual aid. These counts measure record availability, not operating farms.
-(d) Empirical cumulative distribution of mean absolute within-day hourly change, using
-{len(result['daily'])} selected complete farm-days. The x axis measures the mean absolute
-change over 23 consecutive-hour pairs in each day, in percentage points; the y axis gives
-the percentage of selected days at or below that value. Labels mark the smallest observed
-thresholds reaching at least 50% and 90% of days. No binning or smoothing is used.
-Days receive equal weight; farms with longer records may contribute more days. The plot
-does not describe the largest hourly change or a daily maximum-minus-minimum range.
+(d) Mean output by calendar month, shown separately for offshore and onshore farms.
+Within each farm, complete hourly values belonging to the same month are pooled across
+years and averaged. Farm means are then averaged with equal weights within each site type
+and month. Missing months are omitted rather than filled with zero; lines break at missing
+months. All valid hours are used, independently of any complete-day sampling limit.
+The contributing farms and years can differ between months; this is a descriptive summary
+of the retained corpus, not an estimate of a common climatic seasonal effect. Per-month
+farm counts are exported in monthly_output.csv; per-farm monthly hours and means are in
+dataset_summary.csv. No smoothing or uncertainty band is applied.
 The clock timezone is {cfg['analysis']['clock_timezone']}; no local solar-time interpretation is implied.
 
 Supplement S1 (panel e): distributions of paired 24-h and 168-h STL strength estimates.

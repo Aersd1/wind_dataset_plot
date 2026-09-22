@@ -4,7 +4,7 @@ Verified on 2026-09-22, Windows, Python 3.14.3.
 
 ```text
 python -m unittest discover -s tests -v
-Ran 57 tests
+Ran 59 tests
 OK
 
 python -m pip check
@@ -22,11 +22,12 @@ statsmodels==0.15.0
 scikit-learn==1.9.1
 ```
 
-The current default clear layout adds ten tests for exact histogram endpoints and outliers,
+The current default clear layout adds twelve tests for exact histogram endpoints and outliers,
 equal farm weighting, mean changes that never cross cut boundaries, frequency curves without
-bars, monthly coverage with zero hours and partial boundary months, exact empirical daily
-change distributions (ties, constant zero changes and extreme values), main-only calculation
-without STL/clustering, empty-day placeholders,
+bars, monthly coverage with zero hours and partial boundary months, equal farm weights in
+monthly output, cross-year/segment month pooling, configured month timezone, genuine zero
+output versus missing months, line breaks and out-of-range values, main-only calculation
+without STL/clustering, monthly output without complete days,
 and a synthetic CLI export in PNG/PDF/SVG. Related assertions share test cases.
 The 183 x 145 mm combined PDF is rendered with Poppler for visual review; no real time-series
 analysis is run locally. Earlier layout tests explicitly select `layout: legacy`.

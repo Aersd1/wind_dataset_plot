@@ -97,6 +97,13 @@ def analyze_dataset(ds, cfg):
                "ramp_mean":ramps.mean() if len(ramps) else np.nan,
                "low_fraction":np.mean(values<a["low_cf"]), "high_fraction":np.mean(values>a["high_cf"])}
     summary.update({f"output_fraction_{j:02}":v for j,v in enumerate(output_fractions(values))})
+    # Pool retained hours of the same calendar month across years within each farm.
+    # Recombine statistics only; this does not bridge boundaries in temporal differences.
+    months=np.concatenate([s.index.tz_convert(a["clock_timezone"]).month.to_numpy() for s in hourly])
+    for month in range(1,13):
+        selected=values[months==month]
+        summary[f"month_{month:02}_mean_cf"]=float(selected.mean()) if len(selected) else np.nan
+        summary[f"month_{month:02}_hours"]=len(selected)
     for name,period in (("daily",24),("weekly",168)):
         seasonal_panel="e" if cfg["plots"].get("layout","clear")=="clear" else "d"
         if seasonal_panel in cfg["plots"]["panels"]:

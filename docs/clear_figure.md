@@ -1,6 +1,6 @@
 # 四块主图：直接展示数据特征
 
-本版本对应 `plots.layout: "clear"`（默认）。a 为海陆出力分布曲线，b 为匿名风场散点，c 为月均可用风场数折线，d 为完整日样本的日内变化累计分布曲线。主图不使用条形、二维密度色块、z-score、嵌套分位数、STL 强度坐标或多条代表性日曲线。周期强度和完整日模式放到补充图。
+本版本对应 `plots.layout: "clear"`（默认）。a 为海陆出力分布曲线，b 为匿名风场散点，c 为月均可用风场数折线，d 为海上/陆上各月份的平均出力曲线。主图不使用条形、累计分布、二维密度色块、z-score、嵌套分位数、STL 强度坐标或多条代表性日曲线。周期强度和完整日模式放到补充图。
 
 ## 四个面板分别回答什么
 
@@ -9,9 +9,9 @@
 | a Output distribution | 数据经常处于哪些出力水平？ | 横轴为容量百分比，纵轴为每个等宽区间的时间占比，海上/陆上两条曲线直接对比 |
 | b Differences among farms | 风场之间的平均出力和小时变化有多大差异？ | 每点一个匿名风场，越靠右平均出力越高，越靠上平均变化越大 |
 | c Data available over time | 哪些时期有更多风场记录？ | 横轴时间，纵轴该月平均每小时有记录的风场数；线越高，数据覆盖越广 |
-| d Daily variability | 大多数日子的小时出力变化有多大？ | 沿 50% 或 90% 水平线找到曲线，再读横轴的变化幅度；图内直接标出这两个阈值 |
+| d Output by month | 哪些月份的平均出力较高或较低？ | 横轴 1–12 月，纵轴平均出力百分比；海上/陆上各一条线，点越高表示该月平均出力越高 |
 
-a/b 分别保留了原文“输出分布”和“风场差异”的问题；c 保留时间覆盖问题，但改成直观折线；d 直接给出日内变化幅度的分布和两个读数。PCA/UMAP 投影轴不再出现在主图。不能沿用旧图的解释方差、silhouette 或固定类别数。
+a/b 分别保留了原文“输出分布”和“风场差异”的问题；c 展示各个时期的数据覆盖；d 展示一年中不同月份的出力水平。c 数的是有记录的风场，d 算的是出力，两个面板回答不同问题。PCA/UMAP 投影轴不再出现在主图。不能沿用旧图的解释方差、silhouette 或固定类别数。
 
 ## 面向非专业读者的逐图解释
 
@@ -21,7 +21,7 @@ a/b 分别保留了原文“输出分布”和“风场差异”的问题；c �
 
 **c：我们在什么时期拥有多少数据？** 每个月先逐小时数有完整记录的风场，再求平均。例如纵轴 80 表示该月在分析时间范围内平均每小时有 80 个风场提供完整记录，不表示恰好同一批 80 个风场整月都完整。下降说明保留数据的覆盖减少，不能解释为风场停机或退役。中间完全没有记录的月份仍显示为零，不跨过缺失期连成平稳曲线。
 
-**d：多数日子的出力变化是小还是大？** 每个样本是一座风场的一整天；先计算这一天 23 次相邻小时功率差的绝对值，再取平均。横轴是这个平均变化幅度，纵轴表示“不超过该幅度的日样本占多少”。例如图中若标注“90% of days: ≤ 8 pp”，意思是至少 90% 的已选完整日，其平均小时变化不超过容量的 8 个百分点。这里的 8 只是解释用例，不是真实结果。曲线越早升高，表示小幅变化的日样本越多；长尾表示少量日样本的平均小时变化较大。日内变化不是一天最高功率减最低功率，也不是最极端的一次小时跳变。
+**d：哪些月份出力较高，哪些月份较低？** 横轴是 1–12 月，纵轴是平均功率占容量的百分比，两条线分别表示海上和陆上。先把每个风场各年的同一月份小时出力放在一起求平均，再对组内有数据的风场等权平均。例如，某组 1 月为 45%、7 月为 30%，表示其保留记录中 1 月平均出力较高。这两个数仅为读图举例，不是真实结果。45% 不代表该月占全年发电量的 45%。曲线只描述当前数据：各月的风场、年份及保留小时可能不同，因此不能仅凭峰谷就声称发现了普遍的季节规律，更不能把全球数据中的某月份统一叫作冬季或夏季。
 
 **补充 S1：是否存在重复的日/周结构？** 两个箱体汇总各风场在 24 小时、168 小时尺度的 STL 季节强度。数值接近 1 表示该拟合尺度的重复结构较强，接近 0 表示较弱；不是模型精度。它需要方法知识，因此不放主图。
 
@@ -37,7 +37,7 @@ a/b 分别保留了原文“输出分布”和“风场差异”的问题；c �
 
 **c 时间覆盖。** 每个 UTC 小时统计提供完整记录的不同风场数，同风场最多一次，再按日历月求均值。全局分析起止时间内的零覆盖小时纳入分母；首尾不完整月份只用落在该时间范围内的小时，不补齐至整月。点放在对应月的 15 日，连线仅帮助读趋势，不做额外平滑；浅色填充不是不确定性区间。完整小时计数仍导出为 `coverage_hourly.csv`，绘图月均值导出为 `coverage_monthly.csv`。
 
-**d 日内变化累计分布。** 使用同一连续段内具有完整 24 个小时的日记录。每个样本的变化指标为当天 23 对相邻小时绝对差的均值，乘 100 转为百分点。曲线是精确经验累计分布，不分箱、不拟合、不额外平滑；相同数值的日样本全部计入。50% 和 90% 标记采用累计比例首次达到相应水平的最小观测值，重复值可能使累计比例跳过该水平。所有已选日样本等权，长记录风场可能贡献更多天；若配置了每场站日样本上限，则反映抽取后的日样本，不是全部可用天。异常大的变化保留并扩展坐标轴，不裁剪。`daily_change_distribution.csv` 导出曲线全部转折点，`daily_statistics.csv` 保留逐日统计。
+**d 各月份平均出力。** 使用全部保留的完整小时，不要求整天完整，不受日样本抽样上限影响。月份按 `analysis.clock_timezone`（默认 UTC）确定。同一风场的同一日历月跨年份合并，按小时等权求均值；再对相应海陆组中该月有有效记录的风场等权平均，乘 100 后绘图。每个风场每月最多贡献一个均值，不因切割成更多文件而增加权重。风场内部，拥有更多保留小时的年份贡献更大；不是先按年等权。缺失月份为 NaN，线段断开，不填零、不插值，也不额外拟合或平滑。真实零出力照常参与统计，超出 0–100% 的值不裁剪。没有置信带。`monthly_output.csv` 导出每组每月的平均出力和风场数；`dataset_summary.csv` 的 `month_XX_mean_cf` / `month_XX_hours` 保存每个风场各月的出力均值和有效小时数。月份间参与风场可能变化，应结合计数解释差异。
 
 **补充 S1（配置面板 e）。** 同时具有 24 h/168 h 估计的风场进入箱线图。箱体为 IQR，中线为中位数，须为 1.5 IQR 范围内的最远样本，独立点为离群值。两个 STL 单独拟合，不能解释为已从 168 h 结构中移除日周期。
 
@@ -69,7 +69,7 @@ python -m wind_dataset_plot --config local_config.json --validate-only
 python -m wind_dataset_plot --config local_config.json
 ```
 
-主图新增了出力频率计数和平均小时绝对变化，需从 CSV 重新计算一次；不能从旧 PNG、旧五个分位数或不完整旧统计表恢复。代码不会自动读取截图估计数据。片段归并、aligned_segments 选择、MW 单位和容量表连接规则保持一致。
+主图新增了出力频率计数、平均小时绝对变化和按月份的出力统计，需从 CSV 重新计算一次；不能从旧 PNG、旧五个分位数或不完整旧统计表恢复。代码不会自动读取截图估计数据。片段归并、aligned_segments 选择、MW 单位和容量表连接规则保持一致。
 
 输出为 `figures/main_a~d`、`figures/supplement_e/f`、`figures/figure5_clear`，各有 PNG/PDF/SVG。若只生成主图，则不输出补充图。
 
@@ -85,6 +85,6 @@ python -m wind_dataset_plot --config local_config.json
 
 ## 英文图注模板
 
-**Output distributions, variability and temporal coverage of the retained wind-power corpus.** Power is expressed as a percentage of each farm's capacity denominator, using complete hourly observations from retained segments. **a,** Offshore and onshore output-frequency curves. Frequencies are calculated in 10-percentage-point bins for each farm and averaged within site types with equal farm weights; lines connect bin centres. Values outside 0–100% are shown separately when present. **b,** Mean output versus mean absolute change between consecutive hours, with one point per farm. Changes are expressed in percentage points and calculated only within continuous segments. **c,** Monthly mean number of distinct farms with complete hourly records. Each farm is counted at most once per hour; zero-coverage hours within the observation span are included, and boundary months use only hours within that span. Shading in a and c is a visual aid, not an uncertainty interval. **d,** Empirical cumulative distribution of mean absolute within-day hourly change across selected complete farm-days. Each day contains 24 hourly values and contributes one mean over 23 consecutive-hour differences. Guides indicate the smallest observed thresholds reaching at least 50% and 90% of selected days. Each selected farm-day contributes equally; farms with longer records may contribute more days. Gaps and segment boundaries are preserved throughout.
+**Output distributions, variability and temporal coverage of the retained wind-power corpus.** Power is expressed as a percentage of each farm's capacity denominator, using complete hourly observations from retained segments. **a,** Offshore and onshore output-frequency curves. Frequencies are calculated in 10-percentage-point bins for each farm and averaged within site types with equal farm weights; lines connect bin centres. Values outside 0–100% are shown separately when present. **b,** Mean output versus mean absolute change between consecutive hours, with one point per farm. Changes are expressed in percentage points and calculated only within continuous segments. **c,** Monthly mean number of distinct farms with complete hourly records. Each farm is counted at most once per hour; zero-coverage hours within the observation span are included, and boundary months use only hours within that span. Shading in a and c is a visual aid, not an uncertainty interval. **d,** Mean power output by calendar month for offshore and onshore farms. Within each farm, complete hourly observations from the same calendar month are pooled across years and averaged. Available farm means are then averaged with equal weights within each site type and month. Missing months remain missing. Contributing farms, years and retained hours may differ among months; the curves describe the retained corpus rather than an isolated climatic seasonal effect. Gaps and segment boundaries are preserved throughout.
 
 真实运行会自动生成包含风场数、片段数、有效日数和补充图说明的 `figure_description.md`。容量替代值仍由程序附注，不应删除。不要把模拟预览的数值或形状作为真实结果。
