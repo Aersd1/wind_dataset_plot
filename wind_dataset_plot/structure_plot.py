@@ -48,7 +48,7 @@ def draw_structure(axes,frame,palette,seed=20260921):
         for pos,site in enumerate(("offshore","onshore")):
             values=next(g[4] for g in groups if g[0]==key and g[3]==site)
             color=cmap(.20 if site=="offshore" else .68)
-            ticklabels.append(f"{site.title()}\n(n={len(values)})")
+            ticklabels.append(site.title())
             if not len(values): continue
             pooled.extend(values)
             # Truncate KDE at observed extrema: no fabricated tails outside sample support.
@@ -62,8 +62,6 @@ def draw_structure(axes,frame,palette,seed=20260921):
                        marker="o" if site=="offshore" else "^",zorder=3)
             median=float(np.median(values))
             ax.plot([pos-.17,pos+.015],[median,median],color="black",lw=1.4,zorder=4)
-        ax.set_title(title,loc="left",fontsize=7,fontweight="bold",pad=8)
-        ax.text(-.20,1.065,"abc"[i],transform=ax.transAxes,fontsize=8,fontweight="bold")
         ax.set(xticks=[0,1],xticklabels=ticklabels,xlim=(-.5,1.48),ylabel=label)
         if pooled:
             low=min(0,float(np.min(pooled))); high=max(1,float(np.max(pooled)))
@@ -80,10 +78,8 @@ def plot_structure(result,cfg):
     with plt.rc_context({"font.family":"sans-serif","font.sans-serif":["Arial","Helvetica","DejaVu Sans"],
                          "font.size":7,"axes.labelsize":7,"pdf.fonttype":42,"svg.fonttype":"none"}):
         fig,axes=plt.subplots(1,3,figsize=(183/25.4,82/25.4))
-        fig.subplots_adjust(left=.085,right=.985,bottom=.25,top=.84,wspace=.70)
+        fig.subplots_adjust(left=.085,right=.985,bottom=.14,top=.94,wspace=.70)
         draw_structure(axes,result["summary"],cfg["palette"],cfg["analysis"]["seed"])
-        fig.text(.5,.055,"Each point: one farm    |    Black line: group median    |    Wider shape: greater concentration",
-                 ha="center",fontsize=6)
         if result.get("preview_label"):
             fig.text(.5,.98,result["preview_label"],ha="center",va="top",fontsize=6,color=".35")
         paths=[]

@@ -40,18 +40,27 @@ class ClearPlotTests(Fixture):
         self.assertAlmostEqual(result["summary"].iloc[0].cf_iqr,.7)
         self.assertAlmostEqual(result["summary"].filter(like="output_fraction_").iloc[0].sum(),1)
 
-    def test_main_a_has_curves_not_bars_and_c_shows_monthly_coverage(self):
+    def test_main_a_preserves_denominator_and_c_shows_hourly_coverage(self):
         self.segment("farm",0,[100]*8); self.meta("farm")
         self.cfg["plots"]["panels"]=["a","c"]
         result=analyze(self.datasets(),self.cfg)
+        # Tail observations remain in the frequency denominator and audit exports.
+        fractions=np.zeros(12); fractions[[0,1,10,11]]=[.1,.2,.3,.4]
+        result["summary"].loc[:,[f"output_fraction_{i:02}" for i in range(12)]]=fractions
         fig,axes=plt.subplots(1,2)
         try:
             draw_clear("a",axes[0],result,self.cfg)
             self.assertEqual(len(axes[0].patches),0)
             self.assertGreater(len(axes[0].lines),0)
+            self.assertEqual(len(axes[0].collections),0)
+            self.assertEqual(axes[0].get_xlim(),(0,100))
+            self.assertAlmostEqual(axes[0].lines[0].get_ydata().sum(),50)
             draw_clear("c",axes[1],result,self.cfg)
-            np.testing.assert_array_equal(axes[1].lines[0].get_ydata(),monthly_coverage(result["coverage"]).to_numpy())
-            self.assertEqual(len(axes[1].images),0)
+            np.testing.assert_array_equal(axes[1].images[0].get_array()[:,0],result["coverage"].to_numpy())
+            self.assertEqual(axes[1].yaxis.get_ticks_position(),"right")
+            for ax in axes:
+                self.assertFalse(ax.get_title(loc="left"))
+                self.assertFalse(ax.texts)
         finally: plt.close(fig)
 
     def test_monthly_curve_weights_farms_equally_and_breaks_at_missing_month(self):
@@ -126,7 +135,10 @@ class ClearPlotTests(Fixture):
         self.assertEqual(len(monthly),24)
         self.assertEqual(monthly.n_farms.sum(),1)
         for p in (out/"figures").glob("*.svg"):
-            self.assertNotIn("farm_seq",p.read_text())
+            svg=p.read_text()
+            self.assertNotIn("farm_seq",svg)
+            for unwanted in ("(n=","Each point:","One point =", "paired farms"):
+                self.assertNotIn(unwanted,svg)
 
     def test_monthly_output_does_not_require_complete_days(self):
         self.segment("farm",0,[100]*8); self.meta("farm")

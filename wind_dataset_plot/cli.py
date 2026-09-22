@@ -73,7 +73,7 @@ pooled hourly observations. Farms lacking any of the five quantiles are excluded
 (d) Joint hexagonal count map of daily versus weekly STL strength. Each eligible farm contributes
 once; colour is the number of farms in a cell. The diagonal marks equal strengths. Strengths are
 computed independently on continuous windows, then averaged with window-length weights per farm.
-Pairs with an unavailable strength are excluded and counted in the annotation; no missing values
+Pairs with an unavailable strength are excluded and recorded in the tables; no missing values
 are filled with zero. See dataset_summary.csv for eligible windows and hours used.
 (e) Density of complete daily profiles by mean CF and mean absolute within-day hourly change.
 (f) Median profiles of {len(result['patterns'])} data-derived groups, sorted by mean CF, with the
@@ -99,16 +99,20 @@ samples. Segment boundaries and gaps are preserved; out-of-range output is not c
 (a) Two output-frequency curves, connecting the centres of 10-percentage-point output bins.
 Frequencies are calculated per
 farm, then averaged within offshore/onshore groups, giving farms equal weight regardless
-of record length. Each group's bin frequencies sum to 100%. The lines connect measured bin
-frequencies, not a fitted probability model; shading is decorative, not an uncertainty band.
-Bins below 0% and above 100% are shown as separate open markers whenever present; exact 0%
-and 100% belong to the first and last regular bins. No bars or z-scores are used.
+of record length. Frequencies across all twelve bins sum to 100%; the figure shows only
+the ten bins within 0-100%. Tail values remain in the denominator and exported tables;
+displayed frequencies are not renormalized and can sum to less than 100%. The lines connect
+measured bin frequencies, not a fitted probability model. No shading or tail markers are
+drawn. Exact 0% and 100% belong to the first and last regular bins.
 (b) Mean output versus mean absolute change between consecutive hours, with one anonymous
 point per farm. Changes are in percentage points and never cross gaps or segment boundaries.
-(c) Monthly mean number of distinct farms with complete hourly records. Each farm is counted
-once per hour; zero-coverage hours inside the corpus observation span are included. Boundary
-months use only hours within that span. Points represent months and lines connect them;
-shading is a visual aid. These counts measure record availability, not operating farms.
+(c) A narrow vertical temporal-coverage strip, with UTC time increasing upwards and colour
+encoding the number of distinct farms with a complete hourly record. Each original farm is
+counted at most once per hour, regardless of how many retained segments it has. Zero-coverage
+hours remain zero; no monthly averaging or interpolation is applied to the plotted values.
+The horizontal colour scale spans zero to the number of farms included in the analysis.
+These counts measure record availability, not operating farms. Exact values are exported
+in coverage_hourly.csv; coverage_monthly.csv remains a separate descriptive summary.
 (d) Mean output by calendar month, shown separately for offshore and onshore farms.
 Within each farm, complete hourly values belonging to the same month are pooled across
 years and averaged. Farm means are then averaged with equal weights within each site type
@@ -130,7 +134,11 @@ Clustering uses unstandardized 24-dimensional capacity-normalized profiles, so b
 level and temporal shape contribute. The patterns are descriptive, not verified physical regimes.
 
 Only requested panels are generated. Main panels a-d form a 183 x 145 mm figure with editable
-text; e/f are supplemental. No bars, z-scores, quantile envelopes or multiple daily curves appear in the main figure.
+text; the narrow c strip occupies the right side, and e/f are supplemental. Titles, panel
+letters, sample-size annotations and explanatory footers are omitted from production artwork
+for later manuscript assembly. Axis labels, legends and colour scales are retained. Sample
+sizes remain available in the exported tables. Synthetic previews alone retain a provenance
+label to distinguish them from research results.
 No statistical significance, forecasting skill or causal interpretation is inferred.
 """
         if cfg["plots"].get("structure_comparison",True):
@@ -150,7 +158,7 @@ widths are equal across groups and do not encode group size. Black lines mark gr
 medians. Points are horizontally jittered for visibility; horizontal position within a
 group has no quantitative meaning. Constant/single-farm groups show points and a median
 without a density shape. Each farm receives equal weight; missing descriptors are omitted
-separately per panel, with valid counts shown. Shapes are descriptive, not confidence
+separately per panel, with valid counts retained in structure_summary.csv. Shapes are descriptive, not confidence
 intervals or evidence of distinct physical classes. See tables/structure_summary.csv.
 """
     proxies = [d.id for d in datasets if d.provenance.get("capacity_is_proxy")]

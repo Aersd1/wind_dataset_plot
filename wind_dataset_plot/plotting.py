@@ -2,11 +2,9 @@
 from pathlib import Path
 import inspect
 import numpy as np
-import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 from matplotlib.colors import LogNorm
 from matplotlib.lines import Line2D
 from matplotlib.ticker import MaxNLocator
@@ -58,7 +56,6 @@ def draw(panel, ax, result, cfg, fontsize=9):
     full=result["summary"]
     cmap=plt.get_cmap(cfg["palette"])
     c1,c2=cmap(.22),cmap(.72)
-    ax.set_title(f"{panel}  {TITLES[panel]}",loc="left",fontweight="bold",fontsize=fontsize+1,pad=10)
     a=cfg["analysis"]
     if panel=="a":
         z=feature_z(full)
@@ -66,7 +63,7 @@ def draw(panel, ax, result, cfg, fontsize=9):
         for site,offset,color,marker in (("offshore",-.18,c1,"o"),("onshore",.18,c2,"s")):
             selected=z[full.site_type.eq(site).to_numpy()]
             if not len(selected): continue
-            handles.append(Line2D([],[],color=color,marker=marker,ls="",label=f"{site.title()} (n={len(selected)})"))
+            handles.append(Line2D([],[],color=color,marker=marker,ls="",label=site.title()))
             for j in range(4):
                 values=selected[:,j]; values=values[np.isfinite(values)]
                 pos=j+offset
@@ -95,34 +92,22 @@ def draw(panel, ax, result, cfg, fontsize=9):
             x=[10,25,50,75,90]
             ax.fill_between(x,q[0],q[2],color=color,alpha=.18,lw=0)
             ax.plot(x,q[1],color=color,lw=1.7,marker="o" if site=="offshore" else "s",
-                    ms=4,ls="-" if site=="offshore" else "--",label=f"{site.title()} (n={n})")
+                    ms=4,ls="-" if site=="offshore" else "--",label=site.title())
         ax.set(xticks=[10,25,50,75,90],xlabel="Within-farm CF percentile",ylabel="Capacity factor")
         ax.grid(color=".93",lw=.6); ax.set_axisbelow(True)
         if ax.get_legend_handles_labels()[0]: ax.legend(frameon=False,fontsize=fontsize-1,loc="best")
     elif panel=="c":
-        counts=result["coverage"]
-        start=mdates.date2num(counts.index[0].to_pydatetime())
-        end=mdates.date2num((counts.index[-1]+pd.Timedelta("1h")).to_pydatetime())
-        im=ax.imshow(counts.to_numpy()[:,None],extent=(0,1,start,end),origin="lower",aspect="auto",
-                     cmap=cmap,vmin=0,vmax=len(full),interpolation="nearest")
-        ax.yaxis_date(); locator=mdates.AutoDateLocator(minticks=3,maxticks=8)
-        ax.yaxis.set_major_locator(locator); ax.yaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
-        ax.set(xticks=[],ylabel="Time (UTC)")
-        cb=ax.figure.colorbar(im,ax=ax,orientation="horizontal",pad=.11,fraction=.035)
-        cb.set_label("Farms with a fully observed hour",fontsize=fontsize-1)
-        cb.locator=MaxNLocator(integer=True,nbins=5); cb.update_ticks()
+        from .clear_plotting import draw_coverage
+        draw_coverage(ax,result,cfg,fontsize=fontsize-1)
     elif panel=="d":
         pairs=full[["stl_daily","stl_weekly"]].to_numpy(float)
         valid=np.isfinite(pairs).all(axis=1); pairs=pairs[valid]
         if not len(pairs):
-            no_data(ax,f"No farms with both seasonal strengths\n{len(full)} unavailable pairs"); return
+            no_data(ax,"No farms with both seasonal strengths"); return
         im=ax.hexbin(pairs[:,0],pairs[:,1],gridsize=12,extent=(0,1,0,1),mincnt=1,
                      cmap=cmap,linewidths=0,vmin=0)
         ax.plot([0,1],[0,1],color=".65",lw=.7,ls="--",zorder=0)
         ax.set(xlim=(0,1),ylim=(0,1),xlabel="Daily STL strength",ylabel="Weekly STL strength")
-        ax.text(.03,.97,f"{len(pairs)} valid farms; {len(full)-len(pairs)} unavailable",
-                transform=ax.transAxes,va="top",fontsize=fontsize-1,
-                bbox=dict(facecolor="white",edgecolor="none",alpha=.8,pad=2))
         cb=ax.figure.colorbar(im,ax=ax,pad=.02,fraction=.045)
         cb.set_label("Farms per cell",fontsize=fontsize-1)
         cb.locator=MaxNLocator(integer=True,nbins=4); cb.update_ticks()
@@ -167,25 +152,23 @@ def plot_all(result,cfg):
     style()
     out=Path(cfg["output_dir"])/"figures"; out.mkdir(parents=True,exist_ok=True)
     outputs=[]; frame=result["summary"]; plots=cfg["plots"]
-    offshore=int((frame.site_type=="offshore").sum()); onshore=len(frame)-offshore
-    heading=f"{len(frame)} farms | {offshore} offshore, {onshore} onshore"
-    if result.get("preview_label"): heading=result["preview_label"]+" | "+heading
     for panel in plots["panels"]:
         height=max(4.5,len(result["patterns"])*.25+2) if panel=="f" else 5.
-        fig,ax=plt.subplots(figsize=(8.5 if panel in "af" else 7.,height))
+        if panel=="c":
+            fig,ax=plt.subplots(figsize=(45/25.4,105/25.4))
+            fig.subplots_adjust(left=.08,right=.54,bottom=.20,top=.94)
+        else:
+            fig,ax=plt.subplots(figsize=(8.5 if panel in "af" else 7.,height))
         draw(panel,ax,result,cfg)
-        fig.suptitle(heading,fontsize=10,y=1.01)
-        if panel=="b":
-            fig.text(.5,-.04,"Line: across-farm median; band: across-farm 25–75% range at each percentile\nEach farm has equal weight; bands are not confidence intervals",ha="center",fontsize=8)
+        if result.get("preview_label"):
+            fig.suptitle(result["preview_label"],fontsize=6,y=.99)
         save(fig,out/f"{panel}_{TITLES[panel].lower().replace(' ','_')}",cfg,outputs)
     if plots["combined"] and set(plots["panels"])==set("abcdef"):
         fig=plt.figure(figsize=(15,12))
         gs=fig.add_gridspec(3,3,height_ratios=[1,1,1],width_ratios=[1.2,1.2,.7],wspace=.75,hspace=.85)
         positions={"a":gs[0,:2],"b":gs[1,0],"c":gs[:2,2],"d":gs[1,1],"e":gs[2,0],"f":gs[2,1:]}
         for panel in "abcdef": draw(panel,fig.add_subplot(positions[panel]),result,cfg,fontsize=8)
-        fig.suptitle(f"Wind corpus diversity | {heading}",fontsize=13,y=.96)
-        fig.text(.5,.025,"a: distributions across farms; point / bar = median / IQR.   b: median and IQR across farm quantiles (not confidence intervals).\n"
-                 "a, b, d: equal farm weighting.   e, f: equal day weighting.",
-                 ha="center",fontsize=8,color=".3")
+        if result.get("preview_label"):
+            fig.suptitle(result["preview_label"],fontsize=8,y=.99)
         save(fig,out/"figure5_corpus_diversity",cfg,outputs)
     return outputs

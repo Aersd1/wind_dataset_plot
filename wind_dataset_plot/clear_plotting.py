@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.ticker import MaxNLocator
 
-TITLES={"a":"Output distribution", "b":"Differences among farms", "c":"Data available over time",
-        "d":"Output by month", "e":"Repeated temporal structure", "f":"All daily profiles"}
 OUTPUT_COLUMNS=[f"output_fraction_{i:02}" for i in range(12)]
 
 
@@ -51,32 +49,50 @@ def no_data(ax,message):
     ax.set(xticks=[],yticks=[])
 
 
-def heading(ax,panel):
-    label={"e":"S1","f":"S2"}.get(panel,panel)
-    ax.text(-.15,1.06,label,transform=ax.transAxes,fontweight="bold",fontsize=8)
-    ax.set_title(TITLES[panel],loc="left",fontsize=7,fontweight="bold",pad=7)
+def draw_coverage(ax,result,cfg,fontsize=6):
+    """Original-style vertical strip; colour encodes unique farms per UTC hour."""
+    counts=result["coverage"]
+    if counts.empty:
+        no_data(ax,"No hourly records"); return
+    start=mdates.date2num(counts.index[0].to_pydatetime())
+    end=mdates.date2num((counts.index[-1]+pd.Timedelta(hours=1)).to_pydatetime())
+    im=ax.imshow(counts.to_numpy()[:,None],extent=(0,1,start,end),origin="lower",
+                 aspect="auto",cmap=cfg["palette"],vmin=0,vmax=max(1,len(result["summary"])),
+                 interpolation="nearest")
+    ax.yaxis_date()
+    if end-start>=730:
+        locator=mdates.YearLocator(base=max(1,int(np.ceil((end-start)/365.25/7))))
+        formatter=mdates.DateFormatter("%Y")
+    else:
+        locator=mdates.AutoDateLocator(minticks=3,maxticks=7,interval_multiples=True)
+        formatter=mdates.ConciseDateFormatter(locator)
+    ax.yaxis.set_major_locator(locator)
+    ax.yaxis.set_major_formatter(formatter)
+    ax.yaxis.tick_right(); ax.yaxis.set_label_position("right")
+    ax.yaxis.get_offset_text().set_fontsize(fontsize)
+    ax.set(xticks=[],ylabel="Time (UTC)")
+    ax.spines[["top","left","bottom"]].set_visible(False)
+    ax.spines["right"].set_visible(True)
+    cb=ax.figure.colorbar(im,ax=ax,orientation="horizontal",pad=.06,fraction=.025,aspect=14)
+    cb.set_label("Farms with data\nat the same time",fontsize=fontsize)
+    cb.ax.tick_params(labelsize=fontsize,length=2,width=.5)
+    cb.outline.set_linewidth(.5)
+    cb.locator=MaxNLocator(integer=True,nbins=3); cb.update_ticks()
 
 
 def draw_clear(panel,ax,result,cfg):
-    heading(ax,panel)
     frame=result["summary"]; cmap=plt.get_cmap(cfg["palette"])
     colours={"offshore":cmap(.20),"onshore":cmap(.68)}
     if panel=="a":
         groups=group_output(frame)
-        outside=any(v[0]>0 or v[-1]>0 for _,_,v in groups)
         x=np.arange(5,100,10)
-        for j,(site,n,values) in enumerate(groups):
+        for j,(site,_,values) in enumerate(groups):
             ax.plot(x,values[1:11],color=colours[site],lw=1.2,marker="o" if j==0 else "s",
-                    ms=2.3,ls="-" if j==0 else "--",label=f"{site.title()} (n={n})")
-            ax.fill_between(x,values[1:11],color=colours[site],alpha=.10,lw=0)
-            if outside:
-                # Tail symbols are separate open-ended bins, never interpolated into the curve.
-                ax.scatter([-8,108],values[[0,11]],s=9,marker="o" if j==0 else "s",
-                           edgecolors=[colours[site]],facecolors="none",linewidths=.7)
+                    ms=2.3,ls="-" if j==0 else "--",label=site.title())
         ax.set(xlabel="Power output (% of capacity)",ylabel="Share of time (%)",
                xticks=[0,20,40,60,80,100],xlim=(0,100))
-        if outside: ax.set(xticks=[-8,0,25,50,75,100,108],xticklabels=["<0","0","25","50","75","100",">100"],xlim=(-13,113))
-        ax.set_ylim(0,max(1.,max((v.max() for _,_,v in groups),default=1.))*1.25)
+        # Hide tail bins only in the artwork; keep the original all-hour denominator.
+        ax.set_ylim(0,max(1.,max((v[1:11].max() for _,_,v in groups),default=1.))*1.25)
         ax.legend(frameon=False,fontsize=5.7,loc="upper right",handlelength=1)
     elif panel=="b":
         for site,marker in (("offshore","o"),("onshore","^")):
@@ -85,24 +101,13 @@ def draw_clear(panel,ax,result,cfg):
             ax.scatter(data.cf_mean*100,data.ramp_mean*100,s=11,color=colours[site],
                        marker=marker,alpha=.7,linewidths=.25,edgecolors="white",label=site.title())
         ax.set(xlabel="Mean output (% of capacity)",ylabel="Mean hourly change\n(percentage points)")
-        ax.text(.98,.97,"One point = one farm",transform=ax.transAxes,ha="right",va="top",fontsize=5.7)
         ax.legend(frameon=False,fontsize=5.7,loc="upper left",handletextpad=.3)
         finite=frame.ramp_mean.to_numpy(float)*100
         finite=finite[np.isfinite(finite)]
         ax.set_ylim(0,max(1.,float(finite.max()) if finite.size else 1.)*1.35)
         ax.margins(x=.09)
     elif panel=="c":
-        counts=monthly_coverage(result["coverage"])
-        dates=counts.index+pd.Timedelta(days=14)
-        ax.plot(dates,counts.to_numpy(),color=cmap(.4),lw=1.3,marker="o",ms=1.8)
-        ax.fill_between(dates,counts.to_numpy(),0,color=cmap(.4),alpha=.10,lw=0)
-        locator=mdates.AutoDateLocator(minticks=2,maxticks=5,interval_multiples=True)
-        ax.xaxis.set_major_locator(locator)
-        ax.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
-        ax.xaxis.get_offset_text().set_fontsize(5.5)
-        ax.set(xlabel="Time (UTC)",ylabel="Farms with data\n(monthly mean)",ylim=(0,max(1,len(frame))*1.08))
-        ax.yaxis.set_major_locator(MaxNLocator(nbins=5,integer=True))
-        ax.set_xlim(counts.index[0],counts.index[-1]+pd.offsets.MonthBegin(1))
+        draw_coverage(ax,result,cfg)
     elif panel=="d":
         monthly=group_monthly_output(frame)
         finite=monthly.mean_output_percent.dropna().to_numpy()
@@ -126,7 +131,6 @@ def draw_clear(panel,ax,result,cfg):
                          whiskerprops=dict(lw=.6),capprops=dict(lw=.6))
         for body,color in zip(boxes["boxes"],[cmap(.25),cmap(.7)]): body.set(facecolor=color,alpha=.4,linewidth=.6)
         ax.set(xticks=[1,2],xticklabels=["24 h","168 h"],xlabel="STL period",ylabel="Seasonal strength",ylim=(0,1))
-        ax.text(.98,.97,f"{len(values)} paired farms",transform=ax.transAxes,ha="right",va="top",fontsize=5.7)
     elif panel=="f":
         patterns=result["patterns"]; medians=np.asarray(result["medians"])
         if patterns.empty: no_data(ax,"No complete daily records"); return
@@ -141,7 +145,7 @@ def draw_clear(panel,ax,result,cfg):
         cb.set_label("Median output (% of capacity)",fontsize=6)
         cb.ax.tick_params(labelsize=5.5)
     ax.tick_params(labelsize=6,width=.5,length=2.5)
-    ax.spines[["top","right"]].set_visible(False)
+    if panel!="c": ax.spines[["top","right"]].set_visible(False)
     for spine in ax.spines.values(): spine.set_linewidth(.5)
 
 
@@ -162,21 +166,25 @@ def plot_clear(result,cfg):
               "svg.fonttype":"none","axes.grid":False}
     with plt.rc_context(settings):
         for panel in selected:
-            if panel=="f":
+            if panel=="c":
+                fig,ax=plt.subplots(figsize=(45/25.4,105/25.4))
+                fig.subplots_adjust(left=.08,right=.54,bottom=.20,top=.94)
+            elif panel=="f":
                 fig,ax=plt.subplots(figsize=(70/25.4,95/25.4))
-                fig.subplots_adjust(left=.26,right=.84,bottom=.20,top=.88)
+                fig.subplots_adjust(left=.26,right=.84,bottom=.20,top=.94)
             else:
                 fig,ax=plt.subplots(figsize=(89/25.4,80/25.4))
-                fig.subplots_adjust(left=.21,right=.90,bottom=.21,top=.88)
+                fig.subplots_adjust(left=.21,right=.94,bottom=.21,top=.94)
             draw_clear(panel,ax,result,cfg)
             if result.get("preview_label"):
                 fig.text(.5,.98,result["preview_label"],ha="center",va="top",fontsize=5.5,color=".35")
             stem=f"main_{panel}" if panel in "abcd" else f"supplement_{panel}"
             save_exact(fig,out/stem,cfg,outputs)
         if cfg["plots"]["combined"] and set("abcd")<=set(selected):
-            fig,axes=plt.subplots(2,2,figsize=(183/25.4,145/25.4))
-            fig.subplots_adjust(left=.10,right=.90,bottom=.10,top=.93,wspace=.48,hspace=.75)
-            for panel,ax in zip("abcd",axes.flat): draw_clear(panel,ax,result,cfg)
+            fig=plt.figure(figsize=(183/25.4,145/25.4))
+            positions={"a":[.09,.61,.255,.32],"b":[.46,.61,.255,.32],
+                       "d":[.09,.13,.625,.32],"c":[.785,.20,.105,.73]}
+            for panel in "abcd": draw_clear(panel,fig.add_axes(positions[panel]),result,cfg)
             if result.get("preview_label"):
                 fig.text(.5,.99,result["preview_label"],ha="center",va="top",fontsize=6,color=".35")
             save_exact(fig,out/"figure5_clear",cfg,outputs)

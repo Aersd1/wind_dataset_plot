@@ -24,19 +24,24 @@ scikit-learn==1.9.1
 
 The current default clear layout adds twelve tests for exact histogram endpoints and outliers,
 equal farm weighting, mean changes that never cross cut boundaries, frequency curves without
-bars, monthly coverage with zero hours and partial boundary months, equal farm weights in
+bars or fill, hidden tail bins retaining the all-hour denominator, a vertical heatmap retaining
+the original hourly coverage values, monthly coverage exports with zero hours and partial boundary months, equal farm weights in
 monthly output, cross-year/segment month pooling, configured month timezone, genuine zero
 output versus missing months, line breaks and out-of-range values, main-only calculation
 without STL/clustering, monthly output without complete days,
 and a synthetic CLI export in PNG/PDF/SVG. Related assertions share test cases.
-The 183 x 145 mm combined PDF is rendered with Poppler for visual review; no real time-series
-analysis is run locally. Earlier layout tests explicitly select `layout: legacy`.
+The 183 x 145 mm combined preview keeps c as a narrow strip at the right; the independent c
+canvas is 45 x 105 mm. No real time-series analysis is run locally. Earlier layout tests
+explicitly select `layout: legacy`. Production figures omit titles, panel letters, sample-size
+annotations and explanatory footers. Coordinate labels, group legends and colour scales remain.
+The synthetic-preview provenance label is retained only for illustrative fixtures.
 
 Five additional structure-figure tests verify equal farm weights and physical units, exact
 valid-point counts for 131 farms with metric-specific missing values, constant/single/empty
 groups without fabricated densities, rejection of duplicate farm IDs, and standalone
 summary-table export without displayed identities or overwriting an existing output.
-The structure PDF is 183 x 82 mm and is rendered and checked separately.
+The structure PDF is 183 x 82 mm and is checked separately. Tests also verify that removing
+group counts and panel headings does not remove any valid farm points.
 
 The end-to-end test used only synthetic time series: two original datasets, one split into two retained CSV segments. It produced all six panels plus the combined figure in PNG, PDF and SVG. A separate test covered plasma and compatibility with the now-unused pagination setting.
 

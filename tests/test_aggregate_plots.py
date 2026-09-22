@@ -41,7 +41,7 @@ class AggregateTests(unittest.TestCase):
             draw("d",ax,result,DEFAULTS)
             n=result["summary"][["stl_daily","stl_weekly"]].notna().all(axis=1).sum()
             self.assertEqual(ax.collections[0].get_array().sum(),n)
-            self.assertTrue(any(f"{131-n} unavailable" in t.get_text() for t in ax.texts))
+            self.assertFalse(ax.texts)
         finally: plt.close(fig)
 
     def test_small_constant_missing_groups_and_single_site(self):

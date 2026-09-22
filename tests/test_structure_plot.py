@@ -29,6 +29,10 @@ class StructureTests(unittest.TestCase):
             from matplotlib.collections import PathCollection
             counts=[sum(len(c.get_offsets()) for c in ax.collections if isinstance(c,PathCollection)) for ax in axes]
             self.assertEqual(counts,[131,131,130])
+            for ax in axes:
+                self.assertEqual([t.get_text() for t in ax.get_xticklabels()],["Offshore","Onshore"])
+                self.assertFalse(ax.get_title(loc="left"))
+                self.assertFalse(ax.texts)
         finally: plt.close(fig)
 
     def test_constant_single_and_missing_groups_do_not_invent_densities(self):
