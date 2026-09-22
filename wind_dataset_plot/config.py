@@ -25,7 +25,7 @@ DEFAULTS = {
     },
     "plots": {"panels": ["a", "b", "c", "d", "e", "f"],
               "formats": ["png", "pdf", "svg"], "dpi": 300,
-              "rows_per_page": 45, "combined": True},
+              "rows_per_page": 45, "combined": True},  # rows_per_page: accepted legacy setting; unused
 }
 
 

@@ -236,12 +236,12 @@ class EndToEndTests(Fixture):
         self.assertAlmostEqual(pd.read_csv(out/"tables/pattern_summary.csv")["share"].sum(),1)
         self.assertTrue((out/"run_manifest.json").is_file())
 
-    def test_plasma_pagination(self):
+    def test_plasma_aggregate_ignores_legacy_pagination(self):
         self.make_data(); self.cfg["palette"]="plasma"
         self.cfg["plots"].update(panels=["a","b","d"],rows_per_page=1,combined=False)
         results=analyze(self.datasets(),self.cfg)
         outputs=plot_all(results,self.cfg)
-        self.assertEqual(len(outputs),6)
+        self.assertEqual(len(outputs),3)
 
     def test_missing_days_draws_placeholder_not_fake_patterns(self):
         self.segment("farm",0,[100]*8); self.meta("farm")

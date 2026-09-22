@@ -47,17 +47,29 @@ normalization, or clipping to [0,1] is applied. Raw invalid and out-of-range cou
 
 (a) Standardized operating descriptors: CF interquartile range, 95th percentile of absolute
 within-run hourly ramps, and fractions below {cfg['analysis']['low_cf']} / above {cfg['analysis']['high_cf']} CF.
-(b) Per-dataset median and 25–75% / 10–90% empirical intervals, not confidence intervals.
+Each feature is standardized across farms, then its distribution is shown separately for
+offshore and onshore farms. Violins use Gaussian KDE with Scott bandwidth and equal maximum
+width; points/bars show medians/interquartile ranges. Missing values are omitted feature by
+feature; constant or single-value groups show only a point/bar. No farm identities are plotted.
+(b) Group quantile envelopes: compute each farm's hourly CF 10th, 25th, 50th, 75th and 90th
+percentiles first. At each percentile, the line is the median across farms of that site type;
+the band is the across-farm 25–75% range. These are not confidence intervals or quantiles of
+pooled hourly observations. Farms lacking any of the five quantiles are excluded from this panel.
 (c) Number of unique original datasets with a complete hour, on a UTC time axis; gaps remain zero.
-(d) Daily and weekly STL seasonal strength, computed independently on eligible continuous
-windows, then averaged with window-length weights per original dataset. NA denotes insufficient
-or constant data. See dataset_summary.csv for eligible windows and hours used.
+(d) Joint hexagonal count map of daily versus weekly STL strength. Each eligible farm contributes
+once; colour is the number of farms in a cell. The diagonal marks equal strengths. Strengths are
+computed independently on continuous windows, then averaged with window-length weights per farm.
+Pairs with an unavailable strength are excluded and counted in the annotation; no missing values
+are filled with zero. See dataset_summary.csv for eligible windows and hours used.
 (e) Density of complete daily profiles by mean CF and mean absolute within-day hourly change.
 (f) Median profiles of {len(result['patterns'])} data-derived groups, sorted by mean CF, with the
 share of selected days. All {len(result['daily'])} selected days carry equal weight; datasets with
 more selected days therefore contribute more. No natural/physical class claim is implied.
 The clock timezone is {cfg['analysis']['clock_timezone']}. See cluster_selection.csv and the
 manifest for the fitting sample limit, chosen K, sampling settings and library versions.
+Panels a, b and d weight farms equally; e and f weight selected days equally. All six panels
+summarize the corpus without farm names, IDs, or one-row-per-farm displays. Internal farm identity
+is retained in the audit tables for correct segment grouping and reproducibility.
 
 Only requested panels are generated. No silhouette score, farm count, year range or percentage
 from an earlier manuscript is reused. This description does not infer model forecasting skill.

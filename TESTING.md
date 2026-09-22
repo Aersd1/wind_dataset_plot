@@ -1,10 +1,10 @@
 # Local verification
 
-Verified on 2026-09-21, Windows, Python 3.14.3.
+Verified on 2026-09-22, Windows, Python 3.14.3.
 
 ```text
 python -m unittest discover -s tests -v
-Ran 43 tests
+Ran 47 tests
 OK
 
 python -m pip check
@@ -22,7 +22,9 @@ statsmodels==0.15.0
 scikit-learn==1.9.1
 ```
 
-The end-to-end test used only synthetic time series: two original datasets, one split into two retained CSV segments. It produced all six panels plus the combined figure in PNG, PDF and SVG. The combined PNG and the single daily-pattern matrix were visually reviewed for overlapping labels and clipping. A separate test covered plasma and pagination.
+The end-to-end test used only synthetic time series: two original datasets, one split into two retained CSV segments. It produced all six panels plus the combined figure in PNG, PDF and SVG. A separate test covered plasma and compatibility with the now-unused pagination setting.
+
+The aggregate redesign adds four tests: 131 synthetic farms still produce six panels plus a combined figure without names/IDs in SVG; quantile envelopes give farms equal weight regardless of record length; seasonality cells count each valid farm exactly once; and missing/constant/single-site groups render correctly. The 131-farm synthetic preview was also exported to PNG/PDF/SVG and its combined PNG visually reviewed for layout and clipping. It is marked SYNTHETIC STYLE PREVIEW and is not a real-data result.
 
 The manifest update adds 15 synthetic tests covering long/wide equivalence, exact farm/source joins, processing-layer isolation, MW normalization against table capacities, JSON site-type checks, proxy-capacity provenance, missing/duplicate inputs, path remapping, and an end-to-end export.
 
