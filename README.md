@@ -163,7 +163,7 @@ timestamp,power
   "data_dir": "/server/data/retained",
   "metadata_dir": "/server/data/json",
   "output_dir": "/server/output/wind_corpus_v1",
-  "palette": "viridis",
+  "palette": "plasma",
   "defaults": {"value_unit": "kW", "timezone": "UTC"}
 }
 ```
@@ -235,7 +235,7 @@ python -m wind_dataset_plot --config local_config.json
 a 先计算每个风场的时间频率，再按风场等权平均；每组所有区间合计 100%。曲线连接区间中心，不进行额外平滑，浅色填充不是置信区间。低于 0% 和高于 100% 的值另列尾部空心点，不裁剪。b 每个风场一点；f 按已选完整日等权，长记录风场可能贡献更多天。c 对全局观察时段内的小时计数求月均值，包含零覆盖小时，首尾月份不补齐到整月；同时导出原小时计数和月均值。d 先合并同一风场跨年份的同月有效小时求均值，再对有数据的风场等权平均；各月风场数一起导出，缺失月份不填零。d 不受日样本抽样限制，月份差异可能同时受参与风场和年份变化影响。
 
 ```bash
-python examples/preview_aggregate.py --output results/clear_preview --farms 131 --palette viridis
+python examples/preview_aggregate.py --output results/clear_preview --farms 131 --palette plasma
 ```
 
 以上仅生成模拟版式，全部图标注 SYNTHETIC STYLE PREVIEW，不读取真实 CSV，也不能用于论文结论。真实运行请使用新输出目录（模板为 `results/aligned_farms_clear`）。新版需要新增的频率计数、平均小时变化和各月出力，服务器须重新计算；不能从旧 PNG 或五个分位数还原新图。

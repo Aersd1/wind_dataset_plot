@@ -15,7 +15,7 @@
 例如，容量分母为 100 MW 时，a 的 40 表示典型功率为 40 MW，b 的 30 表示中间一半记录覆盖的功率范围宽 30 MW，c 的 10 表示较大小时变化指标为 10 MW。这些是假设示例，不是真实数据结论。b/c 的数值等于归一化出力之差的“百分点”数，但纵轴直接表述为容量的百分比，避免与相对于前一时刻功率的增长率混淆。b 不是最大值减最小值，c 不是最大的小时变化。
 
 - 每一个小点代表一个原始风场，不标注风场名字。切割后的多个片段不会变成多个点。
-- 紫色为海上、绿色为陆上（viridis 默认色）；也可配置 plasma。
+- 默认采用 plasma：紫色为海上、橙色为陆上；也可配置 viridis。
 - 每组黑色短横线是该组风场指标的中位数。
 - 半小提琴在某个高度越宽，表示更多风场集中在这个取值附近。两组最大宽度一致，所以宽度不能用于比较风场总数；有效数量见 n。
 - 散点横向移动只是为了避免遮挡，只有纵坐标具有数值意义。
@@ -45,7 +45,7 @@ git pull --ff-only origin main
 python -m wind_dataset_plot.structure_plot \
   --summary /path/to/results/tables/dataset_summary.csv \
   --output /path/to/results/structure_comparison_v1 \
-  --palette viridis
+  --palette plasma
 ```
 
 输入必须是同一套分析流程导出的、每个原始风场一行的统计表；不能直接传入原始 `power` CSV 或一段一行的清单。输出目录须为空或尚不存在。该命令输出图像、组汇总表和输入路径记录；解释容量等信息时仍需保留原分析的质量审计和 manifest。

@@ -99,7 +99,7 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description="Plot structural differences from a pipeline-generated dataset_summary.csv.")
     parser.add_argument("--summary",required=True)
     parser.add_argument("--output",required=True,help="A new or empty output directory")
-    parser.add_argument("--palette",choices=["viridis","plasma"],default="viridis")
+    parser.add_argument("--palette",choices=["viridis","plasma"],default="plasma")
     args=parser.parse_args(argv)
     out=Path(args.output)
     if out.exists() and any(out.iterdir()): parser.error("Choose a new or empty output directory")

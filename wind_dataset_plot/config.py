@@ -5,7 +5,7 @@ import json
 
 DEFAULTS = {
     "data_dir": "data", "metadata_dir": "metadata", "output_dir": "results",
-    "csv_glob": "**/*.csv", "segments_only": True, "palette": "viridis",
+    "csv_glob": "**/*.csv", "segments_only": True, "palette": "plasma",
     "source_dataset_map": {}, "datasets": {},
     "inputs": {"segments_manifest": None, "capacity_table": None,
                "original_manifest": None, "segment_layer": "aligned_segments",

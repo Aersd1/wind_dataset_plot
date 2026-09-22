@@ -3,7 +3,7 @@
   "metadata_dir": "/path/to/json_metadata",
   "output_dir": "/path/to/results/wind_corpus_v1",
   "segments_only": true,
-  "palette": "viridis",
+  "palette": "plasma",
   "defaults": {
     "time_column": null,
     "value_column": null,

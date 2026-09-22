@@ -56,7 +56,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output",default="results/clear_preview")
     parser.add_argument("--farms",type=int,default=131)
-    parser.add_argument("--palette",choices=["viridis","plasma"],default="viridis")
+    parser.add_argument("--palette",choices=["viridis","plasma"],default="plasma")
     parser.add_argument("--layout",choices=["clear","legacy"],default="clear")
     args=parser.parse_args()
     cfg=copy.deepcopy(DEFAULTS)
