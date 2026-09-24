@@ -138,7 +138,7 @@ def periodicity_plot(summary,path):
                        whiskerprops={'linewidth':.7},capprops={'linewidth':.7})
         for kind,marker in [('offshore','o'),('onshore','^')]:
             vals=paired.loc[paired.site_type.eq(kind),column].to_numpy()
-            ax.scatter(i+categorical_offsets(len(vals),.3),vals,s=12,color=COLORS[kind],marker=marker,alpha=.8,linewidths=0)
+            ax.scatter(i+categorical_offsets(len(vals),.3),vals,s=12,color=COLORS[kind],marker=marker,alpha=.8,linewidths=0,zorder=3)
     ax.set(xticks=[0,1],xticklabels=['Daily (24 h)','Weekly (168 h)'],ylabel='STL seasonal strength',ylim=(0,1),xlim=(-.6,1.6))
     handles=[Line2D([],[],marker=m,color=COLORS[k],linestyle='none',markersize=4,label=k.title())
              for k,m in [('offshore','o'),('onshore','^')]]
