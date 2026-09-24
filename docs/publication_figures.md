@@ -7,8 +7,8 @@
 | 文件 | 内容 | 直接读出的信息 |
 |---|---|---|
 | 01_rotor_diameter_and_hub_height | 叶轮直径、轮毂高度两个散点面板 | 海上与陆上实际设备尺寸的分布；只有 Offshore、Onshore，无 model 类别，无连接线 |
-| 02_volatility_onshore_offshore | 横轴平均出力占容量百分比，纵轴平均逐小时变化（pp） | 每个点一个风场，颜色/形状区分海上与陆上；位置越高，逐小时变化越大 |
-| 03_volatility_capacity_groups | 与图 02 相同坐标 | 用不同颜色/形状区分 <50 MW、50–150 MW、>150 MW，便于比较规模组的波动分布 |
+| 02_volatility_onshore_offshore | 海上、陆上两组散点；纵轴为平均每小时绝对功率变化占额定容量的百分比 | 每个点一个风场；越高波动越大；黑色短横线为组内中位数、竖线为第 25–75 百分位范围 |
+| 03_volatility_capacity_groups | 与图 02 相同纵轴，横轴改为三个容量组 | <50 MW、50–150 MW、>150 MW；比较各组的典型波动和组内分散 |
 | 04_pooled_capacity_factor_distribution | 所有有效小时观测汇总的小提琴轮廓 | 在什么容量因子附近，观测出现得更频繁；散点是各风场的平均容量因子，黑线是所有小时的汇总均值 |
 | 05_daily_profiles_umap_by_climate | 每个完整日一粒点，颜色来自该风场的气候类别 | 看不同气候的日出力行为相近、重叠或分散的位置；不预设不同气候一定分离 |
 | 06_daily_power_panels | 多个 0–23 UTC 时的容量归一化出力小图 | 默认按气候分面；曲线为典型日内出力，阴影为风场间第 25–75 百分位范围 |
@@ -21,6 +21,7 @@
 容量是整座风场的额定总功率，单位 MW。容量因子 CF = 瞬时功率 MW / 风场额定功率 MW。额定容量不由观测最大值替代；不同机型按机组数量乘单机额定功率后求和。
 
 波动指标为 `100 × mean(|CF(t+1) − CF(t)|)`，单位为百分点 pp。例如从容量的 30% 变到 35%，对应 5 pp。它是功率的实际变化，不是模型预测误差 MSE。
+图 02–03 只比较波动，不再以平均出力作为横轴。每个点为一个原始风场，水平轻微错开仅避免遮挡。点旁黑色短横线为组内中位数，竖线为第 25–75 百分位范围（描述风场间差异，不是置信区间）。各风场等权，不作显著性标注。两图采用相同纵轴范围，并导出组内汇总和有效风场计数 CSV。
 50 MW 和 150 MW 两个边界均归入中等容量组。CSV 的容量、海陆分类和图形分组使用同一份匹配表。
 
 原 131 场站的 1770 个 aligned_segments 是时序输入。一个风场切成多段仍只计为一个风场；data_process 层不混入。
@@ -119,9 +120,9 @@ python tools/check_publication_figures.py publication_results/local_metadata
 
 **Equipment dimensions.** Rotor diameter and hub height reported for offshore and onshore farms. Points denote recorded farm-specific dimensions; multiple dimensions are retained for farms with mixed equipment. Vertical offsets avoid overlap. Virtual-turbine reference models are excluded.
 
-**Output variability by farm type.** Mean capacity-normalized output versus mean absolute change between consecutive complete hours. Each point represents one original wind farm; colours and symbols distinguish offshore and onshore sites. Changes are expressed in percentage points of rated farm capacity and do not span gaps or segment boundaries.
+**Output variability by farm type.** Each point represents a farm's mean absolute change between consecutive complete hourly power observations, expressed as a percentage of rated farm capacity. Horizontal black marks indicate group medians and vertical lines the interquartile ranges. Horizontal point offsets avoid overlap; changes do not span gaps or segment boundaries.
 
-**Output variability by rated capacity.** The same farm-level output and variability measures, grouped by rated farm capacity: <50 MW, 50–150 MW and >150 MW. Both boundary values belong to the middle group.
+**Output variability by rated capacity.** Farm-level mean absolute hourly power changes for farms rated <50 MW, 50–150 MW and >150 MW. Both capacity boundaries belong to the middle group. Points, median marks and interquartile ranges follow the farm-type comparison; all farms receive equal weight.
 
 **Pooled capacity-factor distribution.** The violin shows the smoothed distribution of all complete hourly capacity factors, with equal weight per farm-hour. Points indicate individual farm means and the black line the pooled hourly mean. Purple circles and orange triangles denote offshore and onshore farms, respectively.
 

@@ -76,17 +76,38 @@ def equipment_plot(meta,equipment,out):
     return save(fig,folder/'01_rotor_diameter_and_hub_height')
 
 def volatility_scatter(summary,path,by):
+    """Farm-level grouped dots with descriptive medians and interquartile ranges."""
     fig,ax=plt.subplots(figsize=(3.5433071,3.0708661))
-    fig.subplots_adjust(left=.2,right=.97,bottom=.18,top=.84)
+    fig.subplots_adjust(left=.25,right=.98,bottom=.19,top=.97)
     groups=['offshore','onshore'] if by=='site_type' else ['<50 MW','50–150 MW','>150 MW']
     colors=[COLORS[x] for x in groups] if by=='site_type' else SIZE_COLORS
     markers=['o','^'] if by=='site_type' else ['o','s','^']
-    for group,color,marker in zip(groups,colors,markers):
-        g=summary[summary[by].eq(group)]
-        ax.scatter(g.cf_mean*100,g.mean_hourly_change_pp,color=color,marker=marker,
-                   s=16,alpha=.8,linewidths=.3,edgecolors='white',label=group.title() if by=='site_type' else group)
-    ax.set(xlabel='Mean output (% of rated capacity)',ylabel='Mean absolute hourly change (pp)',xlim=(0,100),ylim=(0,None))
-    ax.legend(loc='lower center',bbox_to_anchor=(.5,1.02),ncol=len(groups),handletextpad=.25,columnspacing=.7)
+    rows=[]
+    for x,(group,color,marker) in enumerate(zip(groups,colors,markers)):
+        g=summary[summary[by].eq(group)].sort_values('dataset_id')
+        values=g.mean_hourly_change_pp.to_numpy(dtype=float)
+        values=values[np.isfinite(values)]
+        row={'group':group,'farms_total':len(g),'farms_plotted':len(values),
+             'excluded_undefined_metric':len(g)-len(values)}
+        if len(values):
+            ax.scatter(x-.07+categorical_offsets(len(values),.42),values,color=color,marker=marker,
+                       s=13,alpha=.75,linewidths=.3,edgecolors='white',zorder=3)
+            q25,median,q75=np.quantile(values,[.25,.5,.75])
+            ax.plot([x+.3,x+.3],[q25,q75],color='#222222',lw=1.8,solid_capstyle='butt',zorder=4)
+            ax.plot([x+.22,x+.38],[median,median],color='#222222',lw=1.5,zorder=4)
+            row.update(q25=q25,median=median,q75=q75)
+        rows.append(row)
+    labels=['Offshore','Onshore'] if by=='site_type' else groups
+    finite=summary.mean_hourly_change_pp.to_numpy(dtype=float)
+    finite=finite[np.isfinite(finite)]
+    upper=max(1,float(finite.max())*1.08) if len(finite) else 1
+    ax.set(xticks=range(len(groups)),xticklabels=labels,xlim=(-.55,len(groups)-.45),ylim=(0,upper),
+           xlabel='Farm type' if by=='site_type' else 'Rated farm capacity',
+           ylabel='Mean absolute hourly change\n(% of rated capacity)')
+    ax.spines[['top','right']].set_visible(False)
+    ax.spines[['left','bottom']].set_linewidth(1)
+    ax.tick_params(width=1)
+    pd.DataFrame(rows).to_csv(path.with_name(path.name+'_group_summary.csv'),index=False)
     return save(fig,path)
 
 def pooled_plot(result,path):
