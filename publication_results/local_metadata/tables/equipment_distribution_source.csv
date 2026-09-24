@@ -1,0 +1,99 @@
+dataset_id,site_type,parameter,value_m,basis
+Anholt,offshore,rotor_m,120.0,recorded_equipment
+BANC DE GUERANDE 1,offshore,rotor_m,150.0,recorded_equipment
+BANC DE GUERANDE 2,offshore,rotor_m,150.0,recorded_equipment
+BOWLW-1,offshore,rotor_m,90.0,recorded_equipment
+BRBEO-1,offshore,rotor_m,164.0,recorded_equipment
+BURBW-1,offshore,rotor_m,107.0,recorded_equipment
+Belwind Phase 1,offshore,rotor_m,90.0,recorded_equipment
+Belwind Phase 1,offshore,rotor_m,150.0,recorded_equipment
+DK_KF_AB_GU,offshore,rotor_m,167.0,recorded_equipment
+GRGBW-1,offshore,rotor_m,107.0,recorded_equipment
+GRGBW-2,offshore,rotor_m,107.0,recorded_equipment
+GRGBW-3,offshore,rotor_m,107.0,recorded_equipment
+Horns Rev A,offshore,rotor_m,80.0,recorded_equipment
+Horns Rev B,offshore,rotor_m,93.0,recorded_equipment
+Horns Rev C,offshore,rotor_m,164.0,recorded_equipment
+LARYO-1,offshore,rotor_m,120.0,recorded_equipment
+Roedsand 1,offshore,rotor_m,82.0,recorded_equipment
+Roedsand 2,offshore,rotor_m,93.0,recorded_equipment
+Thorntonbank - C-Power - Area NE,offshore,rotor_m,126.0,recorded_equipment
+Thorntonbank - C-Power - Area SW,offshore,rotor_m,126.0,recorded_equipment
+WLNYW-1,offshore,rotor_m,107.0,recorded_equipment
+BALDHWF1,onshore,rotor_m,92.5,recorded_equipment
+BLUFF1,onshore,rotor_m,66.0,recorded_equipment
+BOCORWF1,onshore,rotor_m,100.0,recorded_equipment
+BRDUW-1,onshore,rotor_m,80.0,recorded_equipment
+BRYBW-1,onshore,rotor_m,71.0,recorded_equipment
+CAPTL_WF,onshore,rotor_m,88.0,recorded_equipment
+CATHROCK,onshore,rotor_m,80.0,recorded_equipment
+CHALLHWF,onshore,rotor_m,64.0,recorded_equipment
+CLDNW-1,onshore,rotor_m,82.4,recorded_equipment
+CLDSW-1,onshore,rotor_m,82.4,recorded_equipment
+CLEMGPWF,onshore,rotor_m,88.0,recorded_equipment
+CNUNDAWF,onshore,rotor_m,80.0,recorded_equipment
+CULLRGWF,onshore,rotor_m,82.0,recorded_equipment
+CULLRGWF,onshore,rotor_m,92.5,recorded_equipment
+GULLRWF1,onshore,rotor_m,82.3,recorded_equipment
+GULLRWF1,onshore,rotor_m,109.0,recorded_equipment
+GUNNING1,onshore,rotor_m,70.0,recorded_equipment
+HALLWF1,onshore,rotor_m,88.0,recorded_equipment
+LKBONNY1,onshore,rotor_m,66.0,recorded_equipment
+LKBONNY2,onshore,rotor_m,90.0,recorded_equipment
+LKBONNY3,onshore,rotor_m,90.0,recorded_equipment
+MINSW-1,onshore,rotor_m,93.0,recorded_equipment
+SNOWNTH1,onshore,rotor_m,101.0,recorded_equipment
+SNOWSTH1,onshore,rotor_m,108.0,recorded_equipment
+SNOWTWN1,onshore,rotor_m,88.0,recorded_equipment
+SNOWTWN1,onshore,rotor_m,95.0,recorded_equipment
+STARHLWF,onshore,rotor_m,64.0,recorded_equipment
+UP_BDDSLDSRDI_1,onshore,rotor_m,71.0,recorded_equipment
+WATERLWF,onshore,rotor_m,90.0,recorded_equipment
+WATERLWF,onshore,rotor_m,117.0,recorded_equipment
+Anholt,offshore,hub_m,81.6,recorded_equipment
+BANC DE GUERANDE 1,offshore,hub_m,100.0,recorded_equipment
+BANC DE GUERANDE 2,offshore,hub_m,100.0,recorded_equipment
+BOWLW-1,offshore,hub_m,75.0,recorded_equipment
+BRBEO-1,offshore,hub_m,105.0,recorded_equipment
+BURBW-1,offshore,hub_m,83.5,recorded_equipment
+Belwind Phase 1,offshore,hub_m,72.0,recorded_equipment
+Belwind Phase 1,offshore,hub_m,100.0,recorded_equipment
+DK_KF_AB_GU,offshore,hub_m,107.0,recorded_equipment
+GRGBW-1,offshore,hub_m,78.0,recorded_equipment
+GRGBW-2,offshore,hub_m,78.0,recorded_equipment
+GRGBW-3,offshore,hub_m,78.0,recorded_equipment
+Horns Rev A,offshore,hub_m,70.0,recorded_equipment
+Horns Rev B,offshore,hub_m,68.0,recorded_equipment
+Horns Rev C,offshore,hub_m,105.0,recorded_equipment
+LARYO-1,offshore,hub_m,87.0,recorded_equipment
+Roedsand 1,offshore,hub_m,69.0,recorded_equipment
+Roedsand 2,offshore,hub_m,68.5,recorded_equipment
+Thorntonbank - C-Power - Area SW,offshore,hub_m,94.0,recorded_equipment
+WLNYW-1,offshore,hub_m,83.5,recorded_equipment
+BALDHWF1,onshore,hub_m,80.0,recorded_equipment
+BLUFF1,onshore,hub_m,60.0,recorded_equipment
+BOCORWF1,onshore,hub_m,80.0,recorded_equipment
+BRDUW-1,onshore,hub_m,60.0,recorded_equipment
+BRYBW-1,onshore,hub_m,69.0,recorded_equipment
+CAPTL_WF,onshore,hub_m,80.0,recorded_equipment
+CATHROCK,onshore,hub_m,60.0,recorded_equipment
+CHALLHWF,onshore,hub_m,68.0,recorded_equipment
+CLDNW-1,onshore,hub_m,80.0,recorded_equipment
+CLDSW-1,onshore,hub_m,80.0,recorded_equipment
+CLEMGPWF,onshore,hub_m,79.0,recorded_equipment
+CNUNDAWF,onshore,hub_m,67.0,recorded_equipment
+CULLRGWF,onshore,hub_m,80.0,recorded_equipment
+GULLRWF1,onshore,hub_m,80.0,recorded_equipment
+GULLRWF1,onshore,hub_m,85.0,recorded_equipment
+GUNNING1,onshore,hub_m,80.0,recorded_equipment
+HALLWF1,onshore,hub_m,80.0,recorded_equipment
+LKBONNY1,onshore,hub_m,60.0,recorded_equipment
+LKBONNY2,onshore,hub_m,80.0,recorded_equipment
+LKBONNY3,onshore,hub_m,80.0,recorded_equipment
+MINSW-1,onshore,hub_m,73.5,recorded_equipment
+SNOWNTH1,onshore,hub_m,80.0,recorded_equipment
+SNOWSTH1,onshore,hub_m,80.0,recorded_equipment
+SNOWTWN1,onshore,hub_m,80.0,recorded_equipment
+STARHLWF,onshore,hub_m,68.0,recorded_equipment
+WATERLWF,onshore,hub_m,80.0,recorded_equipment
+WATERLWF,onshore,hub_m,91.5,recorded_equipment

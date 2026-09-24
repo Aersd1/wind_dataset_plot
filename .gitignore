@@ -9,3 +9,6 @@ results/
 local_data/
 local_config*.json
 .DS_Store
+# Keep large day-level source arrays on the analysis server; publish figures and summaries.
+publication_results/**/tables/daily_profiles.npz
+publication_results/**/tables/daily_profiles_index.csv

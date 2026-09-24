@@ -1,0 +1,56 @@
+test_climate_equal_farm_profiles (test_publication.CollectorTests.test_climate_equal_farm_profiles) ... ok
+test_eleven_climate_facet_layout (test_publication.CollectorTests.test_eleven_climate_facet_layout) ... ok
+test_exact_endpoints_and_real_exceedance (test_publication.CollectorTests.test_exact_endpoints_and_real_exceedance) ... ok
+test_pooled_is_hour_weighted_not_farm_mean_distribution (test_publication.CollectorTests.test_pooled_is_hour_weighted_not_farm_mean_distribution) ... ok
+test_raw_exceedance_not_hidden_by_hourly_averaging (test_publication.CollectorTests.test_raw_exceedance_not_hidden_by_hourly_averaging) ... ok
+test_actual_metadata_climate_join_reads_no_series (test_publication.PublicationWorkflowTests.test_actual_metadata_climate_join_reads_no_series) ... ok
+test_complete_seven_figure_export_from_synthetic_fixture (test_publication.PublicationWorkflowTests.test_complete_seven_figure_export_from_synthetic_fixture) ... INFO: [1/2] farm_0 (1 segments)
+INFO: [2/2] farm_1 (1 segments)
+C:\Users\tiant\Desktop\SI-wind-foundation\output\windfarm_metadata_revision\.venv\Lib\site-packages\umap\__init__.py:9: ImportWarning: Tensorflow not installed; ParametricUMAP will be unavailable
+  warn(
+INFO: Completed 2 farms; C:\Users\tiant\AppData\Local\Temp\tmp3l645isq\results
+ok
+test_metadata_only_does_not_read_raw (test_publication.PublicationWorkflowTests.test_metadata_only_does_not_read_raw) ... ok
+test_query_only_outputs_real_computed_fields_no_figures (test_publication.PublicationWorkflowTests.test_query_only_outputs_real_computed_fields_no_figures) ... INFO: [1/2] farm_0 (1 segments)
+INFO: [2/2] farm_1 (1 segments)
+ok
+test_capacity_boundaries (test_revised.EquipmentTests.test_capacity_boundaries) ... ok
+test_daily_farm_weighting_and_pp_units (test_revised.EquipmentTests.test_daily_farm_weighting_and_pp_units) ... ok
+test_mixed_equipment_count_and_capacity (test_revised.EquipmentTests.test_mixed_equipment_count_and_capacity) ... ok
+test_real_manifest_inspection_without_series_access (test_revised.EquipmentTests.test_real_manifest_inspection_without_series_access) ... ok
+test_umap_keeps_every_test_day_and_exports (test_revised.EquipmentTests.test_umap_keeps_every_test_day_and_exports) ... ok
+test_unknown_and_approximate_are_not_invented (test_revised.EquipmentTests.test_unknown_and_approximate_are_not_invented) ... ok
+test_virtual_capacity_excludes_reference_models (test_revised.EquipmentTests.test_virtual_capacity_excludes_reference_models) ... ok
+test_revised_prepare_uses_capacity_and_site_without_json (test_revised.RevisedManifestTests.test_revised_prepare_uses_capacity_and_site_without_json) ... INFO: [1/2] farm_1 (2 segments)
+INFO: [2/2] farm_2 (1 segments)
+ok
+test_all_revised_exports_with_explicit_umap_skip (test_revised.RevisedManifestTests.test_all_revised_exports_with_explicit_umap_skip) ... INFO: [1/2] farm_1 (2 segments)
+INFO: [2/2] farm_2 (1 segments)
+C:\Users\tiant\Desktop\SI-wind-foundation\wind_dataset_plot\wind_dataset_plot\revised_plotting.py:101: PendingDeprecationWarning: The set_bad function will be deprecated in a future version. Use cmap.with_extremes(bad=...) or Colormap(bad=...) instead.
+  cmap=plt.get_cmap('plasma').copy();cmap.set_bad('#EEEEEE')
+INFO: Completed 2 original farms; outputs: C:\Users\tiant\AppData\Local\Temp\tmpe4d2n81l\results
+warning: The `fitz` API is deprecated and will be removed in future. Use `import pymupdf` instead.
+ok
+test_ambiguous_date_rejected_explicit_format_works (test_pipeline.TimeSeriesTests.test_ambiguous_date_rejected_explicit_format_works) ... ok
+test_complete_day_and_timestamp_end (test_pipeline.TimeSeriesTests.test_complete_day_and_timestamp_end) ... ok
+test_complete_day_requires_one_contiguous_run (test_pipeline.TimeSeriesTests.test_complete_day_requires_one_contiguous_run) ... ok
+test_coverage_counts_original_datasets_once_and_keeps_gap (test_pipeline.TimeSeriesTests.test_coverage_counts_original_datasets_once_and_keeps_gap) ... INFO: [1/1] farm (2 segments)
+ok
+test_dst_day_excluded (test_pipeline.TimeSeriesTests.test_dst_day_excluded) ... ok
+test_gaps_and_file_boundaries_not_bridged (test_pipeline.TimeSeriesTests.test_gaps_and_file_boundaries_not_bridged) ... ok
+test_identical_overlap_removed_conflicting_overlap_fails (test_pipeline.TimeSeriesTests.test_identical_overlap_removed_conflicting_overlap_fails) ... ok
+test_internal_missing_value_splits_run (test_pipeline.TimeSeriesTests.test_internal_missing_value_splits_run) ... ok
+test_mixed_sampling_cadence_rejected (test_pipeline.TimeSeriesTests.test_mixed_sampling_cadence_rejected) ... ok
+test_out_of_range_values_are_preserved_and_audited (test_pipeline.TimeSeriesTests.test_out_of_range_values_are_preserved_and_audited) ... ok
+test_power_energy_unit_conversions (test_pipeline.TimeSeriesTests.test_power_energy_unit_conversions) ... ok
+test_ramps_exclude_cut_boundary (test_pipeline.TimeSeriesTests.test_ramps_exclude_cut_boundary) ... INFO: [1/1] farm (2 segments)
+ok
+test_seasonality_periodic_and_insufficient (test_pipeline.TimeSeriesTests.test_seasonality_periodic_and_insufficient) ... ok
+test_zero_capacity_override_rejected (test_pipeline.TimeSeriesTests.test_zero_capacity_override_rejected) ... ok
+test_clustering_uses_data_and_is_reproducible (test_pipeline.ClusteringTests.test_clustering_uses_data_and_is_reproducible) ... ok
+test_dynamic_k_single_and_empty (test_pipeline.ClusteringTests.test_dynamic_k_single_and_empty) ... ok
+
+----------------------------------------------------------------------
+Ran 34 tests in 37.451s
+
+OK

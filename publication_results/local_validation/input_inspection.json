@@ -1,0 +1,23 @@
+{
+  "manifest_farms": 131,
+  "manifest_rows": 2168,
+  "selected_farms": 131,
+  "selected_segments": 1770,
+  "selected_layer": "aligned_segments",
+  "excluded_farms": [],
+  "aligned_fallback_farms": [],
+  "capacity_proxy_farms": [],
+  "climate_groups": {
+    "Continental": 39,
+    "Oceanic": 27,
+    "Semi-arid": 26,
+    "Subtropical": 17,
+    "Temperate": 6,
+    "Mediterranean": 6,
+    "Subarctic": 4,
+    "Mediterranean / semi-arid": 3,
+    "Tropical monsoon": 1,
+    "Cold desert": 1,
+    "Tundra": 1
+  }
+}

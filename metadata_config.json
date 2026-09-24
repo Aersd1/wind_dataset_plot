@@ -1,0 +1,40 @@
+{
+  "data_dir": "/ve-remi-dmz-dmz-sh-nas01/data/de_group/ghz_11401/data/wind_timeseries/aligned_15min",
+  "metadata_dir": "inputs/revised_metadata",
+  "output_dir": "publication_results/local_metadata",
+  "palette": "plasma",
+  "inputs": {
+    "segments_manifest": "inputs/revised_metadata/farm_paths_segmented_long_131.csv",
+    "capacity_table": "inputs/revised_metadata/farm_capacity_units_131_updated.csv",
+    "original_manifest": "inputs/revised_metadata/farm_paths_original_131.csv",
+    "segment_layer": "aligned_segments",
+    "path_prefix_map": {}
+  },
+  "defaults": {
+    "value_column": "power",
+    "value_unit": "MW",
+    "timestamp_position": "instantaneous",
+    "timezone": "UTC",
+    "interval_minutes": 15
+  },
+  "analysis": {
+    "clock_timezone": "UTC",
+    "clusters": 16,
+    "max_daily_profiles_per_dataset": 0,
+    "max_stl_windows": 0,
+    "seed": 20260924
+  },
+  "plots": {
+    "layout": "legacy",
+    "panels": [
+      "b",
+      "d"
+    ],
+    "formats": [
+      "png",
+      "pdf",
+      "svg"
+    ],
+    "dpi": 600
+  }
+}

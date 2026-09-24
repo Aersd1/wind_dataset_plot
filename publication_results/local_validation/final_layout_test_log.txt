@@ -1,0 +1,12 @@
+test_eleven_climate_facet_layout (test_publication.CollectorTests.test_eleven_climate_facet_layout) ... ok
+test_complete_seven_figure_export_from_synthetic_fixture (test_publication.PublicationWorkflowTests.test_complete_seven_figure_export_from_synthetic_fixture) ... INFO: [1/2] farm_0 (1 segments)
+INFO: [2/2] farm_1 (1 segments)
+C:\Users\tiant\Desktop\SI-wind-foundation\output\windfarm_metadata_revision\.venv\Lib\site-packages\umap\__init__.py:9: ImportWarning: Tensorflow not installed; ParametricUMAP will be unavailable
+  warn(
+INFO: Completed 2 farms; C:\Users\tiant\AppData\Local\Temp\tmpwsoy0l68\results
+ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 32.505s
+
+OK

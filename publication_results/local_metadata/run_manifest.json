@@ -1,0 +1,100 @@
+{
+  "status": "metadata_only",
+  "raw_series_accessed": false,
+  "input_report": {
+    "manifest_farms": 131,
+    "manifest_rows": 2168,
+    "selected_farms": 131,
+    "selected_segments": 1770,
+    "selected_layer": "aligned_segments",
+    "excluded_farms": [],
+    "aligned_fallback_farms": [],
+    "capacity_proxy_farms": [],
+    "climate_groups": {
+      "Continental": 39,
+      "Oceanic": 27,
+      "Semi-arid": 26,
+      "Subtropical": 17,
+      "Temperate": 6,
+      "Mediterranean": 6,
+      "Subarctic": 4,
+      "Mediterranean / semi-arid": 3,
+      "Tropical monsoon": 1,
+      "Cold desert": 1,
+      "Tundra": 1
+    }
+  },
+  "config": {
+    "data_dir": "C:\\ve-remi-dmz-dmz-sh-nas01\\data\\de_group\\ghz_11401\\data\\wind_timeseries\\aligned_15min",
+    "metadata_dir": "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\inputs\\revised_metadata",
+    "output_dir": "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\publication_results\\local_metadata",
+    "csv_glob": "**/*.csv",
+    "segments_only": true,
+    "palette": "plasma",
+    "source_dataset_map": {},
+    "datasets": {},
+    "inputs": {
+      "segments_manifest": "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\inputs\\revised_metadata\\farm_paths_segmented_long_131.csv",
+      "capacity_table": "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\inputs\\revised_metadata\\farm_capacity_units_131_updated.csv",
+      "original_manifest": "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\inputs\\revised_metadata\\farm_paths_original_131.csv",
+      "segment_layer": "aligned_segments",
+      "path_prefix_map": {}
+    },
+    "defaults": {
+      "time_column": null,
+      "value_column": "power",
+      "value_unit": "MW",
+      "rated_capacity_kw": null,
+      "timezone": "UTC",
+      "timestamp_format": null,
+      "timestamp_unit": null,
+      "timestamp_position": "instantaneous",
+      "interval_minutes": 15,
+      "csv_separator": ","
+    },
+    "analysis": {
+      "clock_timezone": "UTC",
+      "low_cf": 0.05,
+      "high_cf": 0.8,
+      "min_stl_cycles": 3,
+      "stl_window_hours": 1344,
+      "max_stl_windows": 0,
+      "max_daily_profiles_per_dataset": 0,
+      "clusters": 16,
+      "max_clusters": 12,
+      "cluster_fit_limit": 5000,
+      "silhouette_limit": 1500,
+      "seed": 20260924
+    },
+    "plots": {
+      "layout": "legacy",
+      "panels": [
+        "b",
+        "d"
+      ],
+      "formats": [
+        "png",
+        "pdf",
+        "svg"
+      ],
+      "dpi": 600,
+      "rows_per_page": 45,
+      "combined": true,
+      "structure_comparison": true
+    },
+    "config_file": "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\metadata_config.json"
+  },
+  "daily_panels": "climate",
+  "normalization": "Instantaneous MW / equipment-based farm rated MW; never observed maximum",
+  "capacity_sha256": "58a98c1c074f7a05ccbd1dc612890bf6c04e5dfc2638125667c1720c505f807e",
+  "farm_weighting": "One original farm, irrespective of number of segments",
+  "daily_clock": "UTC; not local solar time",
+  "umap": "Every complete 24-hour day; Euclidean distance on capacity-factor vectors; colored by recorded climate group",
+  "climate_inference": "Descriptive associations; separation is not imposed, and climate is not inferred from power",
+  "periodicity": "Independent robust STL fits at 24 h and 168 h; variance-ratio strength",
+  "volatility": "Mean absolute consecutive-hour capacity-factor change times 100, in percentage points",
+  "size_groups": "<50 MW; 50–150 MW inclusive; >150 MW",
+  "figures": [
+    "C:\\Users\\tiant\\Desktop\\SI-wind-foundation\\wind_dataset_plot\\publication_results\\local_metadata\\figures\\01_rotor_diameter_and_hub_height.pdf"
+  ]
+}

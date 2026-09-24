@@ -76,13 +76,15 @@ def seasonal_strength(hours, period, settings):
     return score, len(scores), int(sum(sizes)), eligible
 
 
-def analyze_dataset(ds, cfg):
+def analyze_dataset(ds, cfg, observer=None):
     raw, step, audit, files = load_runs(ds)
     hourly = hourly_runs(raw, step)
     if not hourly:
         raise ValueError(f"{ds.id}: no fully observed hourly bins; check cadence and timestamp convention")
     # All farm descriptors use the same hourly cadence across datasets.
     values = np.concatenate([s.to_numpy() for s in hourly])
+    if observer is not None:
+        observer(ds, raw, hourly)
     ramps = [np.abs(np.diff(s.to_numpy())) for s in hourly if len(s)>1]
     ramps = np.concatenate(ramps) if ramps else np.array([])
     q = np.quantile(values,[.1,.25,.5,.75,.9])
@@ -179,11 +181,11 @@ def cluster_profiles(profiles, settings):
     return assigned,summary,medians,pd.DataFrame(candidates)
 
 
-def analyze(datasets,cfg):
+def analyze(datasets,cfg,observer=None):
     summaries=[]; audits=[]; files=[]; days=[]; profiles=[]; coverage=[]
     for i,ds in enumerate(datasets,1):
         LOG.info("[%s/%s] %s (%s segments)",i,len(datasets),ds.id,len(ds.files))
-        s,a,f,d,p,c=analyze_dataset(ds,cfg)
+        s,a,f,d,p,c=analyze_dataset(ds,cfg,observer=observer)
         summaries.append(s); audits.append(a); files.extend(f); days.append(d); profiles.append(p); coverage.append(c)
     frame=pd.DataFrame(summaries).sort_values(["site_type","cf_median","dataset_id"],kind="stable").reset_index(drop=True)
     daily=pd.concat(days,ignore_index=True)

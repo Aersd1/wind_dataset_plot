@@ -1,0 +1,34 @@
+[
+  {
+    "parameter": "rotor_m",
+    "site_type": "offshore",
+    "eligible_recorded_farms": 20,
+    "shown_farms": 20,
+    "visual_unit": "Farm-specific equipment specification",
+    "reference_models_displayed": false
+  },
+  {
+    "parameter": "rotor_m",
+    "site_type": "onshore",
+    "eligible_recorded_farms": 26,
+    "shown_farms": 26,
+    "visual_unit": "Farm-specific equipment specification",
+    "reference_models_displayed": false
+  },
+  {
+    "parameter": "hub_m",
+    "site_type": "offshore",
+    "eligible_recorded_farms": 20,
+    "shown_farms": 19,
+    "visual_unit": "Farm-specific equipment specification",
+    "reference_models_displayed": false
+  },
+  {
+    "parameter": "hub_m",
+    "site_type": "onshore",
+    "eligible_recorded_farms": 26,
+    "shown_farms": 25,
+    "visual_unit": "Farm-specific equipment specification",
+    "reference_models_displayed": false
+  }
+]

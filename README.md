@@ -1,12 +1,29 @@
 # Wind dataset plots
 
+**最新入口：七类数据特征图。** 使用 `python -m wind_dataset_plot.publication --config publication_config.json`：设备直径/轮毂高散点、海陆波动散点、容量组波动散点、pooled capacity-factor 小提琴、气候 UMAP、每日功率多面板图、日/周周期性图。尺寸图只有 Offshore 和 Onshore，没有 model 分组或连线。[七图说明、服务器运行命令和英文图注](docs/publication_figures.md)。
+
+已上传的真实本地结果位于 `publication_results/local_metadata`（仅尺寸图及其来源表）。其余六图需要服务器上的原始时序；未在本地运行研究时序，也没有上传人工生成的占位研究结果。
+
+```sh
+git pull --ff-only
+python -m pip install -e . -r requirements-qa.txt
+python -m wind_dataset_plot.publication --config publication_config.json --inspect
+python -m wind_dataset_plot.publication --config publication_config.json --query-only --output-dir publication_results/server_query
+python -m wind_dataset_plot.publication --config publication_config.json
+python tools/check_publication_figures.py publication_results/server_run
+```
+
+如需原来类似 16 类日曲线的多面板布局，正式运行时增加 `--daily-panels patterns`；默认按气候分面。服务器路径变化时，修改配置中的 `inputs.path_prefix_map`。输出目录已存在时不会自动覆盖；可选择新的 `--output-dir`。
+
+以下为旧版入口及图形方案，保留兼容。
+
 **当前默认：四块主图 + 两张补充图。** a 为无填充的海陆出力分布曲线，b 为匿名风场散点，c 为原文样式的竖向窄时间覆盖热图，d 为海上/陆上各月份的平均出力曲线。正式图像不放图名、面板编号、样本数标注或底部解释文字；保留坐标轴、图例和色条。详见 [逐图解释、统计口径与英文图注](docs/clear_figure.md)。
 
 **新增独立结构对比图：** 半小提琴＋匿名风场散点，并排比较典型出力、出力范围和较大的小时变化。每个风场等权，见 [读图说明、英文图注及快速重绘命令](docs/structure_comparison.md)。clear 布局默认额外输出 `farm_structure_comparison`，可用 `plots.structure_comparison: false` 关闭。
 
 从 **切割后保留的、未归一化 CSV 时序**计算数据集特征，生成论文训练语料多样性图。支持场站路径清单，也支持 `linear_artifact_remover.py` 的来源注释。清单模式使用容量表，并从 JSON 读取海陆类型；不使用 JSON 的 `history`、`statistics` 或预测结果。
 
-项目没有附带研究原始数据或预计算论文结果。测试只使用代码临时生成的小型合成数据。
+项目附带新的设备参数表及路径清单，不包含原始功率序列。测试使用临时生成的小型合成数据，以及只读清单/容量核验。
 
 ## 1. 在服务器安装
 
