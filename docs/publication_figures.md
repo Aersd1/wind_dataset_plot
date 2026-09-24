@@ -42,8 +42,17 @@ NREL 等所有 131 场站仍用于其余时序图；设备参数表完整保留�
 
 ## 气候 UMAP 和每日大图
 
-气候来自所提供 Excel 的气候字段，原文字和分组均保留。`climate_groups.csv` 显式记录合并关系，例如两个湿润大陆性亚型合为 Continental，oceanic/maritime 表述合为 Oceanic。
-这是一套图例简化分组，不是由时序重新推断的 Köppen 气候分类。原 131 场站对应 11 个分组；未知标签会报错，不能由功率猜测气候。
+气候按作者指定的五类分组，UMAP 图例与每日曲线面板使用相同的名称、顺序和颜色：
+
+| 图例类别 | 原表标签归并 |
+|---|---|
+| Humid continental | 湿润大陆性气候的暖夏、热夏亚型 |
+| Arid / semi-arid | 寒冷/炎热半干旱、半干旱、寒冷沙漠气候 |
+| Humid subtropical | 湿润亚热带气候 |
+| Oceanic | 温带海洋性、海洋性、温带海洋气候 |
+| Other climates | 地中海、亚寒带、热带季风、苔原、未细分温带/大陆性，以及地中海–半干旱过渡类型 |
+
+原始气候描述完整保留；`climate_groups.csv` 逐条记录对应关系。过渡类型保留在 Other climates 中，不推断为纯粹的半干旱气候。这是用于展示的五类归并，不是从功率序列重新推断气候。未知原始标签会报错；五类名称及状态由 `climate_groups_status.json` 核验。
 
 UMAP 输入每个完整日的 24 维小时 CF，采用欧氏距离，保留所有符合条件的完整日。坐标不带物理单位，颜色不是聚类编号；绘图仅打散显示顺序以避免某一组始终遮盖其他组。
 不同气候也可能重叠，图形本身不证明气候造成差异；表中同时导出气候与数据来源的交叉计数。
@@ -71,7 +80,7 @@ python -m pip install -e . -r requirements-qa.txt
 python -m wind_dataset_plot.publication --config publication_config.json --inspect
 ```
 
-该检查只读清单及元数据，应显示 131 场站、1770 个 aligned_segments、11 个气候分组。
+该检查只读清单及元数据，应显示 131 场站、1770 个 aligned_segments、5 个气候分组。
 功率 CSV 的 power 是瞬时 MW，采样间隔默认 15 min；无时区的时间戳按配置中的 UTC 解释。如果服务器源文件采用其他时区，须明确设置 defaults.timezone。
 服务器路径改变时修改 inputs.path_prefix_map，例如将原路径前缀映射到新的挂载目录。
 

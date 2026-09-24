@@ -1,20 +1,20 @@
 climate_original,climate_group
-"Humid continental climate, warm summer",Continental
-"Humid continental climate, hot summer",Continental
-Humid subtropical climate,Subtropical
-Cold semi-arid climate,Semi-arid
+"Humid continental climate, warm summer",Humid continental
+"Humid continental climate, hot summer",Humid continental
+Humid subtropical climate,Humid subtropical
+Cold semi-arid climate,Arid / semi-arid
 Temperate oceanic climate,Oceanic
-Semi-arid climate,Semi-arid
-Temperate climate,Temperate
+Semi-arid climate,Arid / semi-arid
+Temperate climate,Other climates
 Oceanic climate,Oceanic
 Temperate maritime climate,Oceanic
-Subarctic climate,Subarctic
-Hot semi-arid climate,Semi-arid
-Mediterranean climate,Mediterranean
-Temperate Mediterranean–semi-arid transitional climate,Mediterranean / semi-arid
-Warm-summer Mediterranean continental climate,Mediterranean
-Tropical monsoon climate,Tropical monsoon
-Warm-summer Mediterranean climate,Mediterranean
-Cold desert climate,Cold desert
-Tundra climate,Tundra
-Temperate continental (per config),Continental
+Subarctic climate,Other climates
+Hot semi-arid climate,Arid / semi-arid
+Mediterranean climate,Other climates
+Temperate Mediterranean–semi-arid transitional climate,Other climates
+Warm-summer Mediterranean continental climate,Other climates
+Tropical monsoon climate,Other climates
+Warm-summer Mediterranean climate,Other climates
+Cold desert climate,Arid / semi-arid
+Tundra climate,Other climates
+Temperate continental (per config),Other climates

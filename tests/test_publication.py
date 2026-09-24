@@ -45,7 +45,7 @@ class CollectorTests(unittest.TestCase):
         np.testing.assert_allclose(table.q25_cf,.3)
         np.testing.assert_allclose(table.q75_cf,.7)
 
-    def test_eleven_climate_facet_layout(self):
+    def test_five_climate_facet_layout(self):
         md=Path(__file__).resolve().parents[1]/'inputs/revised_metadata'
         groups=sorted(pd.read_csv(md/'climate_groups.csv').climate_group.unique())
         table=pd.DataFrame([{'climate_group':g,'hour_utc':h,'median_cf':.5,'q25_cf':.3,'q75_cf':.7}
@@ -79,7 +79,7 @@ class PublicationWorkflowTests(unittest.TestCase):
         pd.DataFrame(capacities,columns=['name','source','rated_power_kW_used','rated_power_MW_used','power_unit_original_csv','rated_capacity_source','onshore_offshore']).to_csv(self.root/'capacities.csv',index=False)
         pd.DataFrame(metadata,columns=['dataset_id','site_type','rated_capacity_mw','climate','is_virtual','source']).to_csv(self.meta/'farm_numeric_metadata.csv',index=False)
         pd.DataFrame(equipment,columns=['dataset_id','site_type','record_kind','rotor_m','hub_m']).to_csv(self.meta/'turbine_groups_long.csv',index=False)
-        pd.DataFrame([['Oceanic climate','Oceanic'],['Cold semi-arid climate','Semi-arid']],columns=['climate_original','climate_group']).to_csv(self.meta/'climate_groups.csv',index=False)
+        pd.DataFrame([['Oceanic climate','Oceanic'],['Cold semi-arid climate','Arid / semi-arid']],columns=['climate_original','climate_group']).to_csv(self.meta/'climate_groups.csv',index=False)
         cfg['inputs'].update(segments_manifest=str(self.root/'segments.csv'),capacity_table=str(self.root/'capacities.csv'))
         self.config=self.root/'config.json';self.config.write_text(json.dumps(cfg),encoding='utf-8')
 
@@ -91,6 +91,13 @@ class PublicationWorkflowTests(unittest.TestCase):
         state=json.loads((self.root/'results/run_manifest.json').read_text())
         self.assertFalse(state['raw_series_accessed'])
         self.assertEqual(len(state['figures']),1)
+
+    def test_unconfirmed_climate_mapping_blocks_before_raw_access(self):
+        (self.meta/'climate_groups_status.json').write_text(json.dumps({'status':'awaiting_author_definition','required_groups':5}))
+        for path in self.root.glob('farm_*.csv'):path.unlink()
+        with self.assertRaisesRegex(ValueError,'author-defined five categories'):
+            main(['--config',str(self.config)])
+        self.assertFalse((self.root/'results').exists())
 
     def test_query_only_outputs_real_computed_fields_no_figures(self):
         self.assertEqual(main(['--config',str(self.config),'--query-only']),0)
@@ -118,6 +125,9 @@ class PublicationWorkflowTests(unittest.TestCase):
         md=repo/'inputs/revised_metadata'
         farms=pd.read_csv(md/'farm_capacity_units_131_updated.csv')
         mapped=climate_metadata(md/'farm_numeric_metadata.csv',md/'climate_groups.csv',farms.name.tolist())
-        self.assertEqual(len(mapped),131);self.assertEqual(mapped.climate_group.nunique(),11)
+        self.assertEqual(len(mapped),131);self.assertEqual(mapped.climate_group.nunique(),5)
+        self.assertEqual(set(mapped.climate_group),{'Humid continental','Arid / semi-arid','Humid subtropical','Oceanic','Other climates'})
+        transitional=mapped[mapped.climate.str.contains('transitional',na=False)]
+        self.assertTrue(transitional.climate_group.eq('Other climates').all())
 
 if __name__=='__main__':unittest.main()

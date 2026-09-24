@@ -24,36 +24,53 @@ def save(fig,path):
     plt.close(fig)
     return str(path.with_suffix('.pdf'))
 
+CLIMATE_ORDER = ('Humid continental', 'Arid / semi-arid', 'Humid subtropical', 'Oceanic', 'Other climates')
+
+
+def ordered_climates(groups):
+    present=set(groups)
+    return [g for g in CLIMATE_ORDER if g in present]+sorted(present-set(CLIMATE_ORDER))
+
+
 def climate_colors(groups):
-    ordered=sorted(groups)
+    present=set(groups)
+    if present.issubset(CLIMATE_ORDER):
+        palette=dict(zip(CLIMATE_ORDER,plt.get_cmap('plasma')(np.linspace(.05,.9,5))))
+        return {g:palette[g] for g in ordered_climates(present)}
+    ordered=sorted(present)
     return dict(zip(ordered,plt.get_cmap('plasma')(np.linspace(.05,.9,max(1,len(ordered))))))
+
 
 def equipment_plot(meta,equipment,out):
     out=Path(out);folder=out/'figures';folder.mkdir(parents=True,exist_ok=True)
     selected=equipment[equipment.dataset_id.isin(meta.dataset_id)].copy()
-    fig,axes=plt.subplots(1,2,figsize=(7.2047244,2.519685))
-    fig.subplots_adjust(left=.12,right=.98,bottom=.22,top=.97,wspace=.22)
+    fig,axes=plt.subplots(1,2,figsize=(7.2047244,2.0472441))
+    fig.subplots_adjust(left=.065,right=.985,bottom=.25,top=.78,wspace=.2)
+    all_ids=sorted(meta.loc[~meta.is_virtual,'dataset_id'])
+    offsets=dict(zip(all_ids,categorical_offsets(len(all_ids),.5)))
     source=[];counts=[]
     for ax,field,label in zip(axes,['rotor_m','hub_m'],['Rotor diameter (m)','Hub height (m)']):
-        for y,kind in enumerate(['offshore','onshore']):
+        for kind in ['offshore','onshore']:
             ids=sorted(meta.loc[meta.site_type.eq(kind)&~meta.is_virtual,'dataset_id'])
             n_valid=0
-            for offset,identifier in zip(categorical_offsets(len(ids),.5),ids):
+            for identifier in ids:
                 g=selected[selected.dataset_id.eq(identifier)&selected.record_kind.eq('unit_group')]
                 vals=np.sort(g[field].dropna().unique())
                 if not len(vals):continue
                 n_valid+=1
-                ax.scatter(vals,np.full(len(vals),y+offset),s=14,facecolors=COLORS[kind],edgecolors=COLORS[kind],
+                ax.scatter(vals,np.full(len(vals),offsets[identifier]),s=14,facecolors=COLORS[kind],edgecolors=COLORS[kind],
                     marker='o' if kind=='offshore' else '^',linewidths=.5,alpha=.8)
                 for v in vals:source.append({'dataset_id':identifier,'site_type':kind,'parameter':field,'value_m':v,
                     'basis':'recorded_equipment'})
             counts.append({'parameter':field,'site_type':kind,'eligible_recorded_farms':len(ids),'shown_farms':n_valid,
                            'visual_unit':'Farm-specific equipment specification','reference_models_displayed':False})
-        ax.set(xlabel=label,ylim=(1.5,-.5),yticks=[0,1])
+        ax.set(xlabel=label,ylim=(-.4,.4),yticks=[])
         ax.tick_params(axis='y',length=0)
         ax.spines['left'].set_visible(False)
-    axes[0].set_yticklabels(['Offshore','Onshore'])
-    axes[1].set_yticklabels([])
+    handles=[Line2D([],[],marker=marker,color=COLORS[kind],linestyle='none',markersize=4,label=kind.title())
+             for kind,marker in [('offshore','o'),('onshore','^')]]
+    fig.legend(handles=handles,loc='upper center',bbox_to_anchor=(.525,.99),ncol=2,
+               columnspacing=1.8,handletextpad=.4)
     pd.DataFrame(source).to_csv(out/'tables/equipment_distribution_source.csv',index=False)
     (out/'tables/equipment_counts.json').write_text(json.dumps(counts,indent=2),encoding='utf-8')
     return save(fig,folder/'01_rotor_diameter_and_hub_height')
@@ -105,7 +122,7 @@ def climate_umap(result,path):
 def daily_panels(result,path,by='climate'):
     table=result['climate_profiles'] if by=='climate' else result['pattern_profiles']
     column='climate_group' if by=='climate' else 'pattern'
-    groups=sorted(table[column].unique())
+    groups=ordered_climates(table[column].unique()) if by=='climate' else sorted(table[column].unique())
     if not groups:raise ValueError('No complete days for daily panels')
     ncols=min(len(groups),3 if by=='climate' else 4);nrows=int(np.ceil(len(groups)/ncols))
     colors=climate_colors(groups)
@@ -116,7 +133,7 @@ def daily_panels(result,path,by='climate'):
         g=table[table[column].eq(group)].sort_values('hour_utc')
         ax.fill_between(g.hour_utc,g.q25_cf*100,g.q75_cf*100,color=colors[group],alpha=.2,lw=0)
         ax.plot(g.hour_utc,g.median_cf*100,color=colors[group],lw=1.2)
-        label=group.replace(' / ',' /\n')
+        label=group
         ax.text(0,1.04,label,transform=ax.transAxes,ha='left',va='bottom',fontsize=7)
         ax.set(xlim=(0,23),ylim=(0,100),xticks=[0,6,12,18,23],yticks=[0,50,100])
         if i % ncols:ax.set_yticklabels([])

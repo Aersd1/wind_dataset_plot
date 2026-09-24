@@ -117,6 +117,15 @@ def main(argv=None):
     if not np.allclose(meta.rated_capacity_mw,meta.dataset_id.map(capacities),rtol=1e-9,atol=1e-9):
         raise ValueError('Metadata and normalization capacity table disagree; update both explicitly')
     report['climate_groups']=meta.climate_group.value_counts().to_dict()
+    grouping_status_file=metadata_dir/'climate_groups_status.json'
+    if grouping_status_file.exists():
+        grouping_status=json.loads(grouping_status_file.read_text(encoding='utf-8-sig'))
+        report['climate_grouping_status']=grouping_status
+        valid_grouping=(grouping_status.get('status')=='confirmed' and
+                        meta.climate_group.nunique()==grouping_status.get('required_groups') and
+                        set(meta.climate_group)==set(grouping_status.get('group_names',meta.climate_group)))
+        if not (args.inspect or args.metadata_only or args.query_only) and not valid_grouping:
+            raise ValueError('Climate grouping must match the confirmed author-defined five categories. Update climate_groups.csv and climate_groups_status.json before formal plotting. Metadata-only and server query modes remain available.')
     if args.inspect:print(json.dumps(report,ensure_ascii=False,indent=2));return 0
     out=Path(cfg['output_dir'])
     if out.exists() and any(out.iterdir()) and not args.overwrite:

@@ -11,17 +11,24 @@
     "aligned_fallback_farms": [],
     "capacity_proxy_farms": [],
     "climate_groups": {
-      "Continental": 39,
+      "Humid continental": 39,
       "Oceanic": 27,
-      "Semi-arid": 26,
-      "Subtropical": 17,
-      "Temperate": 6,
-      "Mediterranean": 6,
-      "Subarctic": 4,
-      "Mediterranean / semi-arid": 3,
-      "Tropical monsoon": 1,
-      "Cold desert": 1,
-      "Tundra": 1
+      "Arid / semi-arid": 27,
+      "Other climates": 21,
+      "Humid subtropical": 17
+    },
+    "climate_grouping_status": {
+      "status": "confirmed",
+      "required_groups": 5,
+      "group_names": [
+        "Humid continental",
+        "Arid / semi-arid",
+        "Humid subtropical",
+        "Oceanic",
+        "Other climates"
+      ],
+      "group_names_source": "Author instruction, 2026-09-24",
+      "assignment_rule": "Explicit mapping of source labels. Other climates includes Mediterranean, subarctic, tropical monsoon, tundra, unspecified temperate/continental and Mediterranean-semi-arid transitional labels. No climate is inferred from power."
     }
   },
   "config": {

@@ -1,0 +1,13 @@
+{
+  "status": "confirmed",
+  "required_groups": 5,
+  "group_names": [
+    "Humid continental",
+    "Arid / semi-arid",
+    "Humid subtropical",
+    "Oceanic",
+    "Other climates"
+  ],
+  "group_names_source": "Author instruction, 2026-09-24",
+  "assignment_rule": "Explicit mapping of source labels. Other climates includes Mediterranean, subarctic, tropical monsoon, tundra, unspecified temperate/continental and Mediterranean-semi-arid transitional labels. No climate is inferred from power."
+}

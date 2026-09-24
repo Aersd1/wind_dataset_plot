@@ -1,5 +1,7 @@
 # Wind dataset plots
 
+**本轮更新：** 图 01 将海上/陆上放在同一区域，只用共享图例区分；两张波动图恢复散点形式。气候统一为 Humid continental、Arid / semi-arid、Humid subtropical、Oceanic、Other climates 五类，服务器正式绘图入口已恢复。
+
 **最新入口：七类数据特征图。** 使用 `python -m wind_dataset_plot.publication --config publication_config.json`：设备直径/轮毂高散点、海陆波动散点、容量组波动散点、pooled capacity-factor 小提琴、气候 UMAP、每日功率多面板图、日/周周期性图。尺寸图只有 Offshore 和 Onshore，没有 model 分组或连线。[七图说明、服务器运行命令和英文图注](docs/publication_figures.md)。
 
 已上传的真实本地结果位于 `publication_results/local_metadata`（仅尺寸图及其来源表）。其余六图需要服务器上的原始时序；未在本地运行研究时序，也没有上传人工生成的占位研究结果。

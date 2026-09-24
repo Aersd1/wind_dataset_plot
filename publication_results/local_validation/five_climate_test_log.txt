@@ -1,0 +1,22 @@
+test_climate_equal_farm_profiles (test_publication.CollectorTests.test_climate_equal_farm_profiles) ... ok
+test_exact_endpoints_and_real_exceedance (test_publication.CollectorTests.test_exact_endpoints_and_real_exceedance) ... ok
+test_five_climate_facet_layout (test_publication.CollectorTests.test_five_climate_facet_layout) ... ok
+test_pooled_is_hour_weighted_not_farm_mean_distribution (test_publication.CollectorTests.test_pooled_is_hour_weighted_not_farm_mean_distribution) ... ok
+test_raw_exceedance_not_hidden_by_hourly_averaging (test_publication.CollectorTests.test_raw_exceedance_not_hidden_by_hourly_averaging) ... ok
+test_actual_metadata_climate_join_reads_no_series (test_publication.PublicationWorkflowTests.test_actual_metadata_climate_join_reads_no_series) ... ok
+test_complete_seven_figure_export_from_synthetic_fixture (test_publication.PublicationWorkflowTests.test_complete_seven_figure_export_from_synthetic_fixture) ... INFO: [1/2] farm_0 (1 segments)
+INFO: [2/2] farm_1 (1 segments)
+C:\Users\tiant\Desktop\SI-wind-foundation\output\windfarm_metadata_revision\.venv\Lib\site-packages\umap\__init__.py:9: ImportWarning: Tensorflow not installed; ParametricUMAP will be unavailable
+  warn(
+INFO: Completed 2 farms; C:\Users\tiant\AppData\Local\Temp\tmptv8f2o5w\results
+ok
+test_metadata_only_does_not_read_raw (test_publication.PublicationWorkflowTests.test_metadata_only_does_not_read_raw) ... ok
+test_query_only_outputs_real_computed_fields_no_figures (test_publication.PublicationWorkflowTests.test_query_only_outputs_real_computed_fields_no_figures) ... INFO: [1/2] farm_0 (1 segments)
+INFO: [2/2] farm_1 (1 segments)
+ok
+test_unconfirmed_climate_mapping_blocks_before_raw_access (test_publication.PublicationWorkflowTests.test_unconfirmed_climate_mapping_blocks_before_raw_access) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 53.535s
+
+OK
