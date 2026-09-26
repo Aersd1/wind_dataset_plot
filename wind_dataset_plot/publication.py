@@ -9,7 +9,7 @@ import pandas as pd
 from scipy.ndimage import gaussian_filter1d
 from .analysis import analyze, cluster_profiles
 from .config import load_config
-from .revised import prepare, derived_tables, embed_profiles
+from .revised import prepare, derived_tables
 
 LOG=logging.getLogger(__name__)
 EPS=1e-9  # Floating-point comparison only; not a physical exceedance allowance.
@@ -70,17 +70,37 @@ class ObservationCollector:
             'weighting':'Each complete farm-hour has equal weight; longer records contribute more hours'}
 
 def climate_profiles(result):
-    """Typical farm profile first, then equal-farm median and IQR within climate."""
-    farm=result['farm_hourly_profile']/100
-    types=result['summary'].set_index('dataset_id').climate_group
+    """Equal weight per farm.
+
+    The line is the median of farm-mean hourly profiles. The band is the median,
+    across farms, of each farm's own 25th and 75th percentile across complete days.
+    The interquartile range of the farm-mean profiles is only the spread of averages
+    (about 11 percentage points) and is not used as the drawn interval.
+    """
+    daily=result['daily']
+    profiles=np.asarray(result['profiles'],dtype=float)
+    grouped={}
+    for index,farm in enumerate(daily.dataset_id.to_numpy()):
+        grouped.setdefault(farm,[]).append(index)
+    climates=result['summary'].set_index('dataset_id').climate_group
     rows=[]
-    for climate in sorted(types.unique()):
-        group=farm.reindex(types[types.eq(climate)].index).dropna(how='all')
-        if group.empty:continue
+    for climate,farms in climates.groupby(climates).groups.items():
+        means=[];low=[];high=[]
+        for farm in farms:
+            idx=grouped.get(farm)
+            if not idx:continue
+            block=profiles[idx]
+            means.append(block.mean(axis=0))
+            low.append(np.quantile(block,.25,axis=0))
+            high.append(np.quantile(block,.75,axis=0))
+        if not means:continue
+        means,low,high=np.vstack(means),np.vstack(low),np.vstack(high)
         for hour in range(24):
-            x=group.iloc[:,hour].dropna()
-            rows.append({'climate_group':climate,'hour_utc':hour,'farms':len(x),
-                         'median_cf':x.median(),'q25_cf':x.quantile(.25),'q75_cf':x.quantile(.75)})
+            rows.append({'climate_group':climate,'hour_utc':hour,'farms':len(means),
+                         'median_cf':float(np.median(means[:,hour])),
+                         'q25_cf':float(np.median(low[:,hour])),
+                         'q75_cf':float(np.median(high[:,hour])),
+                         'band':'median across farms of each farm\'s day-level 25th and 75th percentile'})
     return pd.DataFrame(rows)
 
 def write_tables(result,collector,meta,out):
@@ -137,7 +157,7 @@ def main(argv=None):
         'capacity_sha256':hashlib.sha256(Path(cfg['inputs']['capacity_table']).read_bytes()).hexdigest(),
         'farm_weighting':'One original farm, irrespective of number of segments',
         'daily_clock':'UTC; not local solar time',
-        'umap':'Every complete 24-hour day; Euclidean distance on capacity-factor vectors; colored by recorded climate group',
+        'profile_similarity':'PCA of one 24-hour mean profile per farm; Euclidean proximity is the classical scaling of profile distance. Climate is color only',
         'climate_inference':'Descriptive associations; separation is not imposed, and climate is not inferred from power',
         'periodicity':'Independent robust STL fits at 24 h and 168 h; variance-ratio strength',
         'volatility':'Mean absolute consecutive-hour capacity-factor change times 100, in percentage points',
@@ -179,7 +199,6 @@ def main(argv=None):
                 'q25_cf':np.quantile(v[:,h],.25),'q75_cf':np.quantile(v[:,h],.75),'days':len(v)})
         result['pattern_profiles']=pd.DataFrame(rows)
         result['pattern_profiles'].to_csv(out/'tables/pattern_daily_profiles.csv',index=False)
-    result=embed_profiles(result,cfg['analysis']['seed'])
     result['daily'].to_csv(out/'tables/daily_profiles_index.csv',index=False,encoding='utf-8-sig')
     state['figures']=plot_publication(result,meta,pd.read_csv(metadata_dir/'turbine_groups_long.csv'),out,args.daily_panels)
     state['status']='complete';checkpoint()

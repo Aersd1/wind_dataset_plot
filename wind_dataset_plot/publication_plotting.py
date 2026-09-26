@@ -76,7 +76,7 @@ def equipment_plot(meta,equipment,out):
     return save(fig,folder/'01_rotor_diameter_and_hub_height')
 
 def volatility_scatter(summary,path,by):
-    """Farm-level grouped dots with descriptive medians and interquartile ranges."""
+    """Farm-level grouped dots. Group median and interquartile range stay in the CSV only."""
     fig,ax=plt.subplots(figsize=(3.5433071,3.0708661))
     fig.subplots_adjust(left=.25,right=.98,bottom=.19,top=.97)
     groups=['offshore','onshore'] if by=='site_type' else ['<50 MW','50–150 MW','>150 MW']
@@ -93,8 +93,6 @@ def volatility_scatter(summary,path,by):
             ax.scatter(x-.07+categorical_offsets(len(values),.42),values,color=color,marker=marker,
                        s=13,alpha=.75,linewidths=.3,edgecolors='white',zorder=3)
             q25,median,q75=np.quantile(values,[.25,.5,.75])
-            ax.plot([x+.3,x+.3],[q25,q75],color='#222222',lw=1.8,solid_capstyle='butt',zorder=4)
-            ax.plot([x+.22,x+.38],[median,median],color='#222222',lw=1.5,zorder=4)
             row.update(q25=q25,median=median,q75=q75)
         rows.append(row)
     labels=['Offshore','Onshore'] if by=='site_type' else groups
@@ -125,43 +123,108 @@ def pooled_plot(result,path):
     ax.set(xlim=(-.55,.55),ylim=(0,1.04),ylabel='Capacity factor',xticks=[0],xticklabels=['All farms'],yticks=np.arange(0,1.01,.2))
     return save(fig,path)
 
-def climate_umap(result,path):
-    daily=result['daily'];colors=climate_colors(daily.climate_group.unique())
+def climate_profile_similarity(result,path):
+    """One point per farm. Proximity is Euclidean similarity of the 24-hour mean profile.
+
+    Principal components are the classical scaling of that distance. Climate
+    colors the points and is not used to place them.
+    """
+    from sklearn.decomposition import PCA
+    profile=result['farm_hourly_profile']
+    hours=[column for column in profile.columns if str(column).startswith('hour_')]
+    values=profile[hours].to_numpy(dtype=float)/100
+    model=PCA(n_components=2,svd_solver='full').fit(values)
+    xy=model.transform(values)
+    if np.corrcoef(xy[:,0],values.mean(axis=1))[0,1]<0:
+        xy[:,0]*=-1;model.components_[0]*=-1
+    afternoon=values[:,16:20].mean(axis=1)-values[:,2:7].mean(axis=1)
+    if np.corrcoef(xy[:,1],afternoon)[0,1]<0:
+        xy[:,1]*=-1;model.components_[1]*=-1
+    climates=result['summary'].set_index('dataset_id').climate_group.reindex(profile.index)
+    frame=pd.DataFrame({'dataset_id':profile.index,'climate_group':climates.to_numpy(),
+                        'pc1':xy[:,0],'pc2':xy[:,1],'mean_cf':values.mean(axis=1)})
+    colors=climate_colors(frame.climate_group.unique())
     fig,ax=plt.subplots(figsize=(7.2047244,4.7244094))
-    fig.subplots_adjust(left=.1,right=.98,bottom=.3,top=.98)
-    # Mix drawing order deterministically; every eligible day remains unchanged.
-    order=np.argsort((np.arange(len(daily),dtype=float)*.61803398875)%1,kind='stable')
-    frame=daily.iloc[order]
-    ax.scatter(frame.umap_1,frame.umap_2,c=[colors[x] for x in frame.climate_group],s=1.1,alpha=.6,
-               linewidths=0,rasterized=True)
-    ax.set(xlabel='UMAP 1',ylabel='UMAP 2',xticks=[],yticks=[])
-    handles=[Line2D([],[],marker='o',linestyle='none',color=c,markersize=4,label=g) for g,c in colors.items()]
-    fig.legend(handles=handles,loc='lower center',bbox_to_anchor=(.53,.015),ncol=3,
+    fig.subplots_adjust(left=.12,right=.98,bottom=.22,top=.96)
+    for group,color in colors.items():
+        g=frame[frame.climate_group.eq(group)]
+        ax.scatter(g.pc1,g.pc2,s=36,color=color,alpha=.92,linewidths=.4,edgecolors='white',zorder=3)
+    share=model.explained_variance_ratio_
+    ax.set(xlabel=f'PC1 ({share[0]*100:.0f}% of profile variance)',
+           ylabel=f'PC2 ({share[1]*100:.0f}% of profile variance)')
+    ax.spines[['top','right']].set_visible(False)
+    handles=[Line2D([],[],marker='o',linestyle='none',color=c,markersize=5,label=g) for g,c in colors.items()]
+    fig.legend(handles=handles,loc='lower center',bbox_to_anchor=(.55,.02),ncol=3,
                columnspacing=1.4,handletextpad=.35)
+    tables=path.parent.parent/'tables'
+    frame.to_csv(tables/'farm_profile_similarity.csv',index=False)
+    pd.DataFrame(model.components_,columns=hours,index=['pc1','pc2']).to_csv(tables/'farm_profile_similarity_loadings.csv')
+    (tables/'farm_profile_similarity.json').write_text(json.dumps({
+        'method':'PCA of the 24-hour mean capacity-factor profile, one row per farm',
+        'distance':'Euclidean distance among those profiles; the first two components are its classical scaling',
+        'explained_variance_ratio':[float(x) for x in share],
+        'pc1_correlation_with_mean_cf':float(np.corrcoef(xy[:,0],values.mean(axis=1))[0,1]),
+        'pc2_correlation_with_afternoon_minus_morning':float(np.corrcoef(xy[:,1],afternoon)[0,1]),
+        'climate':'Color only; climate is not an input to the coordinates'},indent=2))
     return save(fig,path)
+
+def _draw_daily_curve(ax,hours,low,median,high,color):
+    ax.fill_between(hours,low,high,color=color,alpha=.22,lw=0)
+    ax.plot(hours,median,color=color,lw=1.2)
+    ax.set(xlim=(0,23),ylim=(0,100),xticks=[0,6,12,18,23],yticks=[0,50,100])
 
 def daily_panels(result,path,by='climate'):
     table=result['climate_profiles'] if by=='climate' else result['pattern_profiles']
     column='climate_group' if by=='climate' else 'pattern'
     groups=ordered_climates(table[column].unique()) if by=='climate' else sorted(table[column].unique())
     if not groups:raise ValueError('No complete days for daily panels')
-    ncols=min(len(groups),3 if by=='climate' else 4);nrows=int(np.ceil(len(groups)/ncols))
+    ncols=len(groups) if by=='climate' else min(len(groups),4)
+    nrows=int(np.ceil(len(groups)/ncols))
     colors=climate_colors(groups)
-    height=max(2.6,nrows*1.6)
+    height=2.55 if by=='climate' else max(2.6,nrows*1.6)
     fig,axes=plt.subplots(nrows,ncols,figsize=(7.2047244,height),squeeze=False)
-    fig.subplots_adjust(left=.1,right=.98,bottom=.42/height,top=1-.32/height,hspace=.58,wspace=.25)
+    if by=='climate':
+        fig.subplots_adjust(left=.075,right=.985,bottom=.2,top=.8,wspace=.32)
+    else:
+        fig.subplots_adjust(left=.1,right=.98,bottom=.42/height,top=1-.32/height,hspace=.58,wspace=.25)
     for i,(ax,group) in enumerate(zip(axes.flat,groups)):
         g=table[table[column].eq(group)].sort_values('hour_utc')
-        ax.fill_between(g.hour_utc,g.q25_cf*100,g.q75_cf*100,color=colors[group],alpha=.2,lw=0)
-        ax.plot(g.hour_utc,g.median_cf*100,color=colors[group],lw=1.2)
-        label=group
-        ax.text(0,1.04,label,transform=ax.transAxes,ha='left',va='bottom',fontsize=7)
-        ax.set(xlim=(0,23),ylim=(0,100),xticks=[0,6,12,18,23],yticks=[0,50,100])
+        _draw_daily_curve(ax,g.hour_utc,g.q25_cf*100,g.median_cf*100,g.q75_cf*100,colors[group])
+        ax.set_title(group,fontsize=6.5,pad=3,loc='left')
         if i % ncols:ax.set_yticklabels([])
         if i//ncols<nrows-1:ax.set_xticklabels([])
     for ax in list(axes.flat)[len(groups):]:fig.delaxes(ax)
-    fig.supxlabel('Hour of day (UTC)',fontsize=7,y=.06/height)
-    fig.supylabel('Output (% of rated capacity)',fontsize=7,x=.015)
+    fig.supxlabel('Hour of day (UTC)',fontsize=7,y=.045 if by=='climate' else .06/height)
+    fig.supylabel('Output (% of rated capacity)',fontsize=7,x=.012 if by=='climate' else .015)
+    return save(fig,path)
+
+def farm_daily_panels(result,selection,path):
+    """Two rows of per-farm daily curves. Each panel is one dataset."""
+    daily=result['daily']
+    profiles=np.asarray(result['profiles'],dtype=float)
+    grouped={}
+    for index,farm in enumerate(daily.dataset_id.to_numpy()):
+        grouped.setdefault(farm,[]).append(index)
+    colors=climate_colors([item['climate_group'] for item in selection])
+    ncols,nrows=6,2
+    if len(selection)!=ncols*nrows:raise ValueError('This figure is laid out as two rows of six farms')
+    fig,axes=plt.subplots(nrows,ncols,figsize=(7.2047244,3.7),squeeze=False)
+    fig.subplots_adjust(left=.07,right=.985,bottom=.14,top=.86,hspace=.62,wspace=.28)
+    hours=np.arange(24)
+    for i,(ax,item) in enumerate(zip(axes.flat,selection)):
+        block=profiles[grouped[item['dataset_id']]]
+        median=np.median(block,axis=0)*100
+        low=np.quantile(block,.25,axis=0)*100
+        high=np.quantile(block,.75,axis=0)*100
+        _draw_daily_curve(ax,hours,low,median,high,colors[item['climate_group']])
+        ax.set_title(item['label'],fontsize=6.5,pad=2,loc='left')
+        if i % ncols:ax.set_yticklabels([])
+        if i//ncols<nrows-1:ax.set_xticklabels([])
+    fig.supxlabel('Hour of day (UTC)',fontsize=7,y=.02)
+    fig.supylabel('Output (% of rated capacity)',fontsize=7,x=.01)
+    handles=[Line2D([],[],color=c,lw=1.4,label=g) for g,c in colors.items()]
+    fig.legend(handles=handles,loc='upper center',bbox_to_anchor=(.53,.995),ncol=5,
+               columnspacing=.8,handletextpad=.35)
     return save(fig,path)
 
 def periodicity_plot(summary,path):
@@ -189,12 +252,12 @@ def plot_publication(result,meta,equipment,out,daily_by):
     counts={'farms':len(summary),'scatter_valid_farms':int(summary[['cf_mean','mean_hourly_change_pp']].notna().all(axis=1).sum()),
             'periodicity_paired_farms':int(summary[['stl_daily','stl_weekly']].notna().all(axis=1).sum()),
             'complete_days':len(result['daily']),'climate_groups':result['daily'].climate_group.value_counts().to_dict(),
-            'daily_panel_weighting':'Equal farms after per-farm averaging across complete days' if daily_by=='climate' else 'All complete days within each profile cluster'}
+            'daily_panel_weighting':'Equal farms: median of farm-mean profiles; band is the median of each farm day-level interquartile range' if daily_by=='climate' else 'All complete days within each profile cluster'}
     (Path(out)/'tables/panel_sample_counts.json').write_text(json.dumps(counts,indent=2),encoding='utf-8')
     return [equipment_plot(meta,equipment,out),
         volatility_scatter(summary,folder/'02_volatility_onshore_offshore','site_type'),
         volatility_scatter(summary,folder/'03_volatility_capacity_groups','capacity_group'),
         pooled_plot(result,folder/'04_pooled_capacity_factor_distribution'),
-        climate_umap(result,folder/'05_daily_profiles_umap_by_climate'),
+        climate_profile_similarity(result,folder/'05_farm_profile_similarity'),
         daily_panels(result,folder/'06_daily_power_panels',daily_by),
         periodicity_plot(summary,folder/'07_daily_weekly_periodicity')]
