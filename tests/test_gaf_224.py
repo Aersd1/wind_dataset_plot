@@ -20,9 +20,15 @@ class Gaf224Tests(unittest.TestCase):
 
     def test_windows_do_not_cross_run_or_include_outside_cf(self):
         first = pd.Series(np.full(230, .4))
-        second = pd.Series(np.full(448, .6))
+        second = pd.Series(.6 + .1 * np.sin(np.arange(448) / 10))
         first.iloc[100] = 1.2
-        self.assertEqual(candidate_windows([first, second], 224, 224), [(1, 0), (1, 224)])
+        candidates, audit = candidate_windows([first, second], 224, 224, min_range_cf=1e-6)
+        self.assertEqual(candidates, [(1, 0), (1, 224)])
+        self.assertEqual(audit["rejected_out_of_range"], 1)
+        self.assertEqual(audit["rejected_constant"], 0)
+        constant_candidates, constant_audit = candidate_windows([pd.Series(np.full(448, .5))], 224, 224, 1e-6)
+        self.assertEqual(constant_candidates, [])
+        self.assertEqual(constant_audit["rejected_constant"], 2)
         np.testing.assert_array_equal(spread_indices(5, 3), [0, 2, 4])
 
     def test_end_to_end_with_temporary_segments(self):
@@ -55,12 +61,15 @@ class Gaf224Tests(unittest.TestCase):
             settings = root / "settings.json"
             settings.write_text(json.dumps({"publication_config": "publication.json", "window_points": 224,
                                              "stride_points": 224, "max_windows_per_farm": 3,
-                                             "clusters": 2, "seed": 7, "farms": ["A", "B"]}))
-            self.assertFalse(run(settings, root / "output", inspect=True)["raw_series_accessed"])
+                                             "min_range_cf": 1e-6, "clusters": 2, "seed": 7, "farms": "all"}))
+            inspection = run(settings, root / "output", inspect=True)
+            self.assertFalse(inspection["raw_series_accessed"])
+            self.assertEqual(inspection["selected_farm_count"], 2)
             report = run(settings, root / "output")
             self.assertEqual(report["windows"], 6)
             self.assertEqual(len(list((root / "output" / "images" / "fixed").rglob("*.png"))), 6)
             self.assertTrue((root / "output" / "shape" / "cluster_by_climate_group.csv").exists())
+            self.assertTrue((root / "output" / "examples" / "gaf_examples_01.png").exists())
 
 
 if __name__ == "__main__":

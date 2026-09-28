@@ -38,9 +38,10 @@ def gasf(cf: np.ndarray, scale: str = "fixed") -> np.ndarray:
     return np.outer(x, x) - np.outer(sine, sine)
 
 
-def candidate_windows(runs, length: int, stride: int):
-    """Window starts stay inside one finite, constant-cadence source run."""
+def candidate_windows(runs, length: int, stride: int, min_range_cf: float = 0):
+    """Return valid nonconstant windows and rejection counts, without crossing runs."""
     candidates = []
+    audit = {"candidate_slots": 0, "rejected_out_of_range": 0, "rejected_constant": 0}
     for run_index, run in enumerate(runs):
         if len(run) < length:
             continue
@@ -48,9 +49,17 @@ def candidate_windows(runs, length: int, stride: int):
         bad = ((values < -1e-9) | (values > 1 + 1e-9)).astype(np.int64)
         prefix = np.concatenate(([0], np.cumsum(bad)))
         starts = np.arange(0, len(run) - length + 1, stride)
-        candidates.extend((run_index, int(start)) for start in starts
-                          if prefix[start + length] == prefix[start])
-    return candidates
+        audit["candidate_slots"] += len(starts)
+        for start in starts:
+            if prefix[start + length] != prefix[start]:
+                audit["rejected_out_of_range"] += 1
+                continue
+            window = np.clip(values[start:start + length], 0, 1)
+            if np.ptp(window) <= min_range_cf:
+                audit["rejected_constant"] += 1
+                continue
+            candidates.append((run_index, int(start)))
+    return candidates, audit
 
 
 def spread_indices(size: int, limit: int) -> np.ndarray:
@@ -99,23 +108,28 @@ def plot_embedding(table: pd.DataFrame, out: Path) -> None:
 
 
 def plot_examples(examples: list, out: Path) -> None:
-    fig, axes = plt.subplots(len(examples), 3, figsize=(11, 2.1 * len(examples)),
-                             constrained_layout=True, squeeze=False)
-    for row, (farm_id, climate, cf) in enumerate(examples):
-        axes[row, 0].plot(np.arange(224), cf, color="#245f86", lw=1)
-        axes[row, 0].set_ylim(-.03, 1.03)
-        axes[row, 0].set_ylabel(f"{farm_id}\n{climate}", fontsize=7)
-        for col, scale in ((1, "fixed"), (2, "shape")):
-            axes[row, col].imshow(gasf(cf, scale), cmap="gray", vmin=-1, vmax=1,
-                                  interpolation="nearest", origin="lower")
-            axes[row, col].set_xticks([])
-            axes[row, col].set_yticks([])
-    for ax, title in zip(axes[0], ("Capacity factor, 224 points", "GASF, fixed scale", "GASF, shape scale")):
-        ax.set_title(title)
-    axes[-1, 0].set_xlabel("15-minute sample index")
-    fig.savefig(out / "gaf_examples.png", dpi=170)
-    fig.savefig(out / "gaf_examples.pdf")
-    plt.close(fig)
+    folder = out / "examples"
+    folder.mkdir()
+    for page_start in range(0, len(examples), 12):
+        page = examples[page_start:page_start + 12]
+        fig, axes = plt.subplots(len(page), 3, figsize=(11, 2.1 * len(page)),
+                                 constrained_layout=True, squeeze=False)
+        for row, (farm_id, climate, cf) in enumerate(page):
+            axes[row, 0].plot(np.arange(224), cf, color="#245f86", lw=1)
+            axes[row, 0].set_ylim(-.03, 1.03)
+            axes[row, 0].set_ylabel(f"{farm_id}\n{climate}", fontsize=7)
+            for col, scale in ((1, "fixed"), (2, "shape")):
+                axes[row, col].imshow(gasf(cf, scale), cmap="gray", vmin=-1, vmax=1,
+                                      interpolation="nearest", origin="lower")
+                axes[row, col].set_xticks([])
+                axes[row, col].set_yticks([])
+        for ax, title in zip(axes[0], ("Capacity factor, 224 points", "GASF, fixed scale", "GASF, shape scale")):
+            ax.set_title(title)
+        axes[-1, 0].set_xlabel("15-minute sample index")
+        stem = folder / f"gaf_examples_{page_start // 12 + 1:02d}"
+        fig.savefig(stem.with_suffix(".png"), dpi=170)
+        fig.savefig(stem.with_suffix(".pdf"))
+        plt.close(fig)
 
 
 def run(settings_path: Path, output: Path, inspect: bool = False) -> dict:
@@ -127,10 +141,14 @@ def run(settings_path: Path, output: Path, inspect: bool = False) -> dict:
     stride, limit, clusters = (int(settings[k]) for k in ("stride_points", "max_windows_per_farm", "clusters"))
     if min(stride, limit) < 1 or clusters < 2:
         raise ValueError("stride, window limit and cluster count must be positive")
+    min_range_cf = float(settings.get("min_range_cf", 0))
+    if not np.isfinite(min_range_cf) or not 0 <= min_range_cf < 1:
+        raise ValueError("min_range_cf must be finite and in [0, 1)")
     farms, input_report = read_plan(cfg)
-    selected = settings["farms"]
-    if not selected or len(selected) != len(set(selected)):
-        raise ValueError("Select distinct farm IDs")
+    requested = settings.get("farms", "all")
+    selected = [farm["id"] for farm in farms] if requested == "all" else requested
+    if not isinstance(selected, list) or not selected or len(selected) != len(set(selected)):
+        raise ValueError("Set farms to 'all' or a list of distinct farm IDs")
     by_id = {farm["id"]: farm for farm in farms}
     missing = set(selected) - set(by_id)
     if missing:
@@ -140,6 +158,7 @@ def run(settings_path: Path, output: Path, inspect: bool = False) -> dict:
     if not np.allclose(meta.rated_capacity_mw, meta.dataset_id.map({f["id"]: f["capacity_kw"] / 1000 for f in farms})):
         raise ValueError("Capacity table and metadata disagree")
     report = {"status": "inspected" if inspect else "running", "selected_farms": selected,
+              "selected_farm_count": len(selected),
               "manifest_layer": input_report["selected_layer"],
               "selected_climate_counts": meta.climate_group.value_counts().to_dict(),
               "raw_series_accessed": False}
@@ -158,10 +177,12 @@ def run(settings_path: Path, output: Path, inspect: bool = False) -> dict:
         runs, step, audit, _ = load_runs(ds)
         if step != 15 * 60 * 10**9:
             raise ValueError(f"{farm_id}: expected 15-minute samples, found {step / 60e9:g} minutes")
-        candidates = candidate_windows(runs, 224, stride)
-        audits.append({**audit, "eligible_windows": len(candidates), "selected_windows": min(len(candidates), limit)})
+        candidates, window_audit = candidate_windows(runs, 224, stride, min_range_cf)
+        audits.append({**audit, **window_audit, "eligible_windows": len(candidates),
+                       "selected_windows": min(len(candidates), limit)})
         if not candidates:
-            raise ValueError(f"{farm_id}: no valid 224-point windows")
+            pd.DataFrame(audits).to_csv(output / "farm_audit.csv", index=False)
+            raise ValueError(f"{farm_id}: no valid nonconstant 224-point windows; see farm_audit.csv")
         selected_indices = spread_indices(len(candidates), limit)
         for sample_number, index in enumerate(selected_indices):
             run_index, start = candidates[index]
@@ -210,11 +231,12 @@ def run(settings_path: Path, output: Path, inspect: bool = False) -> dict:
                   windows_per_farm=table.dataset_id.value_counts().to_dict(), analyses=results,
                   methods={"field": "GASF = cos(arccos(x_i) + arccos(x_j))",
                            "fixed_scale": "x = 2 * capacity_factor - 1",
-                           "shape_scale": "per-window min-max; constant windows map to zero",
+                           "shape_scale": "per-window min-max after nonconstant-window screening",
                            "feature": "32 x 32 block means of 224 x 224 GASF",
                            "clustering": "KMeans on the 1024-dimensional GASF features",
                            "embedding": "PCA for display only; clustering is not done in PCA space",
-                           "sampling": "non-overlapping candidate windows spread across each farm's available runs"})
+                           "sampling": "non-overlapping nonconstant candidate windows spread across each farm's available runs",
+                           "minimum_capacity_factor_range": min_range_cf})
     (output / "run_manifest.json").write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
     return report
 
