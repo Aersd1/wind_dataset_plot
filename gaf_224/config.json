@@ -1,0 +1,20 @@
+{
+  "publication_config": "../publication_config.json",
+  "window_points": 224,
+  "stride_points": 224,
+  "max_windows_per_farm": 32,
+  "seed": 20260928,
+  "clusters": 4,
+  "farms": [
+    "NREL_WTK_site20092_Arizona-Apache_class3_16MW_2007-2013",
+    "NREL_WTK_site33345_California-SanBernardino_class2_16MW_2007-2013",
+    "NREL_WTK_site119090_Maine-Waldo_class3_16MW_2007-2013",
+    "NREL_WTK_site39241_Kansas-Chase_class2_16MW_2007-2013",
+    "NREL_WTK_site12172_Alabama-Chambers_class3_16MW_2007-2013",
+    "NREL_WTK_site14725_SouthCarolina-Bamberg_class3_16MW_2007-2013",
+    "BALDHWF1",
+    "BLUFF1",
+    "NREL_WTK_site121764_Washington-Klickitat_class2_16MW_2007-2013",
+    "NREL_WTK_site1415_Florida-MiamiDade_class3_16MW_2007-2013"
+  ]
+}
